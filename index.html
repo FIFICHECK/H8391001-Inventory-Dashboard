@@ -88,12 +88,12 @@
         </div>
 
         <div class="row mb-4">
-            <div class="col-md-2"><div class="card kpi-card" onclick="switchTab('all')"><div class="kpi-value" style="color:var(--primary)">328</div><div class="kpi-label">📦 Total SKUs</div></div></div>
-            <div class="col-md-2"><div class="card kpi-card"><div class="kpi-value" style="color:var(--success)">7,732</div><div class="kpi-label">📊 Total Stock</div></div></div>
-            <div class="col-md-2"><div class="card kpi-card border-danger" onclick="switchTab('alerts')"><div class="kpi-value" style="color:var(--danger)">67</div><div class="kpi-label">🚫 Zero (0)</div></div></div>
-            <div class="col-md-2"><div class="card kpi-card border-warning" onclick="switchTab('alerts')"><div class="kpi-value" style="color:var(--warning)">131</div><div class="kpi-label">⚠️ Low (1-9)</div></div></div>
-            <div class="col-md-2"><div class="card kpi-card"><div class="kpi-value" style="color:var(--success)">89</div><div class="kpi-label">🟢 Normal (10-49)</div></div></div>
-            <div class="col-md-2"><div class="card kpi-card"><div class="kpi-value" style="color:var(--primary)">41</div><div class="kpi-label">🔵 High (50+)</div></div></div>
+            <div class="col-md-2"><div class="card kpi-card" onclick="switchTab('all')"><div class="kpi-value" style="color:var(--primary)">0</div><div class="kpi-label">📦 Total SKUs</div></div></div>
+            <div class="col-md-2"><div class="card kpi-card"><div class="kpi-value" style="color:var(--success)">0</div><div class="kpi-label">📊 Total Stock</div></div></div>
+            <div class="col-md-2"><div class="card kpi-card border-danger" onclick="switchTab('alerts')"><div class="kpi-value" style="color:var(--danger)">0</div><div class="kpi-label">🚫 Zero (0)</div></div></div>
+            <div class="col-md-2"><div class="card kpi-card border-warning" onclick="switchTab('alerts')"><div class="kpi-value" style="color:var(--warning)">0</div><div class="kpi-label">⚠️ Low (1-9)</div></div></div>
+            <div class="col-md-2"><div class="card kpi-card"><div class="kpi-value" style="color:var(--success)">0</div><div class="kpi-label">🟢 Normal (10-49)</div></div></div>
+            <div class="col-md-2"><div class="card kpi-card"><div class="kpi-value" style="color:var(--primary)">0</div><div class="kpi-label">🔵 High (50+)</div></div></div>
         </div>
 
         <ul class="nav nav-tabs">
@@ -256,8 +256,8 @@
             </div>
             <div class="tab-pane fade" id="alerts">
                 <div class="row mt-3">
-                    <div class="col-md-6"><div class="card border-danger"><div class="card-header bg-danger text-white py-2">🚫 Zero Stock (67)</div><div class="table-container" style="max-height:400px"><table class="table table-hover mb-0"><thead><tr><th>SKU</th><th>Product</th><th class="text-end">Stock</th></tr></thead><tbody></tbody></table></div></div></div>
-                    <div class="col-md-6"><div class="card border-warning"><div class="card-header bg-warning text-dark py-2">⚠️ Low Stock (131)</div><div class="table-container" style="max-height:400px"><table class="table table-hover mb-0"><thead><tr><th>SKU</th><th>Product</th><th class="text-end">Stock</th></tr></thead><tbody></tbody></table></div></div></div>
+                    <div class="col-md-6"><div class="card border-danger"><div class="card-header bg-danger text-white py-2">🚫 Zero Stock (0)</div><div class="table-container" style="max-height:400px"><table class="table table-hover mb-0"><thead><tr><th>SKU</th><th>Product</th><th class="text-end">Stock</th></tr></thead><tbody></tbody></table></div></div></div>
+                    <div class="col-md-6"><div class="card border-warning"><div class="card-header bg-warning text-dark py-2">⚠️ Low Stock (0)</div><div class="table-container" style="max-height:400px"><table class="table table-hover mb-0"><thead><tr><th>SKU</th><th>Product</th><th class="text-end">Stock</th></tr></thead><tbody></tbody></table></div></div></div>
                 </div>
             </div>
             <div class="tab-pane fade" id="newsku"><div class="card mt-3"><div class="card-header bg-warning text-dark py-2 d-flex gap-2 flex-wrap align-items-center">🆕 New SKU <small class="text-muted ms-2">最新上架 14 日內</small><input type="text" id="searchNewSku" placeholder="🔍 Search SKU / Product..." class="form-control form-control-sm ms-auto" style="max-width:200px" onkeyup="filterNewSkuTable()"><select id="filterNewSkuStatus" class="form-select form-select-sm" style="width:130px" onchange="filterNewSkuTable();updateNewSkuBrands()"><option value="all">全部狀態</option><option value="zero">🚫 Zero (0)</option><option value="low">⚠️ Low (1-9)</option><option value="normal">🟢 Normal (10-49)</option><option value="high">🔵 High (50+)</option></select><select id="brandNewSku" class="form-select form-select-sm" style="width:160px" onchange="filterNewSkuTable()"><option value="all">All Brands</option></select></div><div class="table-container"><table class="table table-hover mb-0"><thead><tr><th>SKU</th><th>Product Name</th><th class="text-end">Stock</th><th>Status</th><th>Brand</th></tr></thead><tbody id="tableNewSku"></tbody></table></div></div></div>
