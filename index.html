@@ -3,54 +3,696 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B0961005 Inventory Dashboard</title>
+    <title>H8391001 Store Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        .stats { display: flex; gap: 20px; margin: 20px 0; flex-wrap: wrap; }
-        .stat { background: #e3f2fd; padding: 15px 25px; border-radius: 4px; }
-        .stat-value { font-size: 24px; font-weight: bold; color: #1976d2; }
-        .stat-label { color: #666; font-size: 14px; }
-        .btn { display: inline-block; padding: 12px 24px; background: #1976d2; color: white; text-decoration: none; border-radius: 4px; margin: 10px 5px 10px 0; }
-        .btn:hover { background: #1565c0; }
-        .updated { color: #666; margin-top: 20px; font-size: 14px; }
-    </style>
+        :root { --primary: #1e40af; --success: #16a34a; --warning: #d97706; --danger: #dc2626; }
+        body { background: #f0f4f8; font-family: 'Inter', system-ui, sans-serif; }
+        .card { border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border: none; }
+        .header-bg { background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 16px; }
+        .kpi-card { text-align: center; padding: 20px; cursor: pointer; transition: transform 0.2s; }
+        .kpi-card:hover { transform: translateY(-4px); box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+        .kpi-value { font-size: 2.5rem; font-weight: 700; }
+        .kpi-label { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+        .table { font-size: 0.8rem; }
+        .table-container { max-height: 450px; overflow-y: auto; }
+        .table thead th { background: #f8fafc; position: sticky; top: 0; z-index: 1; border-bottom: 2px solid #e2e8f0; }
+        .table tbody tr { cursor: pointer; transition: background 0.15s; }
+        .table tbody tr:hover { background: #f1f5f9; }
+        .nav-tabs { border-bottom: 2px solid #e2e8f0; }
+        .nav-tabs .nav-link { border: none; color: #64748b; font-weight: 500; padding: 12px 20px; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+        .nav-tabs .nav-link:hover { color: var(--primary); }
+        .nav-tabs .nav-link.active { color: var(--primary); border-bottom: 3px solid var(--primary); background: transparent; }
+        .badge-zero { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 4px 10px; }
+        .badge-low { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; padding: 4px 10px; }
+        .badge-normal { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 4px 10px; }
+        .badge-high { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 4px 10px; }
+        .tab-content { padding-top: 20px; }
+        .detail-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; }
+        .detail-modal.show { display: flex; }
+        .detail-card { background: white; border-radius: 16px; padding: 30px; max-width: 500px; width: 90%; }
+        code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+        .table-responsive { border-radius: 0 0 16px 16px; }
+
+/* Japanese-style sales chart nav buttons - pill design */
+        .jp-btn-nav { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 8px; padding: 4px 0; scrollbar-width: thin; }
+        .jp-btn-nav::-webkit-scrollbar { height: 4px; }
+        .jp-btn-nav::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+        .jp-btn { 
+            flex-shrink: 0;
+            padding: 6px 14px; 
+            font-size: 0.75rem; 
+            font-weight: 500;
+            border-radius: 20px; 
+            border: 1.5px solid #e0e0e0;
+            background: #fff;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .jp-btn:hover { 
+            background: #f8f9fa; 
+            border-color: #bbb;
+            color: #333;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        .jp-btn.active { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.35);
+        }
+        .jp-btn.active:hover {
+            background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+        }
+        </style>
 </head>
 <body>
-    <div class="container">
-        <h1>📦 B0961005 Inventory Dashboard</h1>
-        <p>Merchant: <strong>Hong Kong online Community pharmacy superstore</strong></p>
-        
-        <div class="stats">
-            <div class="stat">
-                <div class="stat-value">188</div>
-                <div class="stat-label">Total SKUs</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value">183</div>
-                <div class="stat-label">Online</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value">51</div>
-                <div class="stat-label">Brands</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value">97</div>
-                <div class="stat-label">Alerts</div>
-            </div>
-            <div class="stat">
-                <div class="stat-value">188</div>
-                <div class="stat-label">Price Issues</div>
+    <div class="container-fluid py-4 px-4">
+        <div class="card mb-4 header-bg text-white">
+            <div class="card-body py-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="mb-1">🌿 H8391001 Store Dashboard</h2>
+                        <p class="mb-0 opacity-75">Hong Kong online Community pharmacy superstore</p>
+                        <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:4px">📅 Inventory Report: 2026-08-08 (00:00:00) &nbsp;|&nbsp; 🔄 2026-08-09 10:09:33</p>
+                        <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:2px">📅 Order Report: 2026-08-07 (23:59:59) &nbsp;|&nbsp; 🔄 2026-08-09 10:09:33</p>
+                    </div>
+                    <span id="countdownDisplay" style="color:rgba(255,255,255,0.9);font-size:0.85rem;font-weight:500" title="Auto-refresh when cron job completes">🔄 Cron</span>
+                </div>
             </div>
         </div>
-        
-        <a href="B0961005_Inventory_Dashboard_20260617_100523.html" class="btn">📊 Open Full Dashboard</a>
-        <a href="reports/" class="btn">📥 Download Reports</a>
-        
-        <div class="updated">
-            Last updated: 2026-06-17 10:05:23
+
+        <div class="row mb-4">
+            <div class="col-md-2"><div class="card kpi-card" onclick="switchTab('all')"><div class="kpi-value" style="color:var(--primary)">328</div><div class="kpi-label">📦 Total SKUs</div></div></div>
+            <div class="col-md-2"><div class="card kpi-card"><div class="kpi-value" style="color:var(--success)">7,732</div><div class="kpi-label">📊 Total Stock</div></div></div>
+            <div class="col-md-2"><div class="card kpi-card border-danger" onclick="switchTab('alerts')"><div class="kpi-value" style="color:var(--danger)">67</div><div class="kpi-label">🚫 Zero (0)</div></div></div>
+            <div class="col-md-2"><div class="card kpi-card border-warning" onclick="switchTab('alerts')"><div class="kpi-value" style="color:var(--warning)">131</div><div class="kpi-label">⚠️ Low (1-9)</div></div></div>
+            <div class="col-md-2"><div class="card kpi-card"><div class="kpi-value" style="color:var(--success)">89</div><div class="kpi-label">🟢 Normal (10-49)</div></div></div>
+            <div class="col-md-2"><div class="card kpi-card"><div class="kpi-value" style="color:var(--primary)">41</div><div class="kpi-label">🔵 High (50+)</div></div></div>
         </div>
+
+        <ul class="nav nav-tabs">
+            <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#all">📋 All (328)</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#skuid">🔢 By Online SKU (318)</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#brand">🏷️ Brand (78)</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#category">📦 By Category</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#skustatus">📊 By SKU Status</button></li>
+            <li class="nav-item"><button class="nav-link text-danger" data-bs-toggle="tab" data-bs-target="#alerts">⚠️ Alerts (198)</button></li>
+            <li class="nav-item"><button class="nav-link text-warning" data-bs-toggle="tab" data-bs-target="#newsku">🆕 New SKU (20)</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pricecheck">💰 Price Check (328)</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#report">📋 Report</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#salestrend">📈 Sales Trend</button></li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="all">
+                <div class="card mt-3">
+                    <div class="card-header d-flex gap-2 py-3 flex-wrap">
+                        <input type="text" id="searchAll" placeholder="🔍 Search..." class="form-control" style="max-width:200px" onkeyup="filterTable('all')">
+                        <select id="filterAll" class="form-select" style="width:120px" onchange="filterTable('all')"><option value="all">All Status</option><option value="zero">🚫 Zero (0)</option><option value="low">⚠️ Low (1-9)</option><option value="normal">🟢 Normal (10-49)</option><option value="high">🔵 High (50+)</option></select>
+                        <select id="brandAll" class="form-select" style="width:160px" onchange="filterTable('all')"><option value="all">All Brands</option><option value="reagen">Reagen</option><option value="桂格">桂格</option><option value="可口可樂">可口可樂</option><option value="swisse">Swisse</option><option value="淳茶舍">淳茶舍</option><option value="卡倫">卡倫</option><option value="家樂牌">家樂牌</option><option value="維他">維他</option><option value="救世">救世</option><option value="飛雪">飛雪</option><option value="屈臣氏">屈臣氏</option><option value="便利通">便利通</option><option value="芬達">芬達</option><option value="海倫仙度絲">海倫仙度絲</option><option value="舒特膚">舒特膚</option><option value="津路">津路</option><option value="健肝素">健肝素</option><option value="雪碧">雪碧</option><option value="雀巢">雀巢</option><option value="動必骼">動必骼</option><option value="維特健靈 ">維特健靈 </option><option value="wholelove plus">WholeLove Plus</option><option value="農夫山泉">農夫山泉</option><option value="日本命力">日本命力</option><option value="五塔">五塔</option><option value="康萃樂">康萃樂</option><option value="生力">生力</option><option value="malee">Malee</option><option value="唯潔雅">唯潔雅</option><option value="olly">OLLY</option><option value="水動樂">水動樂</option><option value="新奇士">新奇士</option><option value="正安堂">正安堂</option><option value="和田">和田</option><option value="monster">MONSTER</option><option value="余仁生">余仁生</option><option value="g-niib">G-NiiB</option><option value="詩樂氏">詩樂氏</option><option value="滴露">滴露</option><option value="hong kong">Hong Kong</option><option value="pgut">PGut</option><option value="和興">和興</option><option value="藍妹">藍妹</option><option value="proven">PROVEN</option><option value="pantene">PANTENE</option><option value="pantene ">PANTENE </option><option value="御藥堂">御藥堂</option><option value="golden king">Golden King</option><option value="伊藤園">伊藤園</option><option value="holdbody">Holdbody</option><option value="return 回本">Return 回本</option><option value="均隆">均隆</option><option value="張權破痛油">張權破痛油</option><option value="whc">WHC</option><option value="口健樂">口健樂</option><option value="babo botanicals">Babo Botanicals</option><option value="mustela">Mustela</option><option value="ddrops">Ddrops</option><option value="日本大正肯得">日本大正肯得</option><option value="黄道益">黄道益</option><option value="安鼻靈">安鼻靈</option><option value="rejoice飄柔">Rejoice飄柔</option><option value="玉林牌">玉林牌</option><option value="施樂輝">施樂輝</option><option value="the globalab">the GLOBALab</option><option value="美德瑪">美德瑪</option><option value="善存">善存</option><option value="天喜堂">天喜堂</option><option value="善理療">善理療</option><option value="福星藥廠">福星藥廠</option><option value="樂多珠珠">樂多珠珠</option><option value="馬百良">馬百良</option><option value="樂敦">樂敦</option><option value="保心安">保心安</option><option value="ezerra">Ezerra</option><option value="橙樹">橙樹</option><option value="皇漢堂">皇漢堂</option><option value="衍生">衍生</option></select>
+                    </div>
+                    <div class="table-container">
+                        <table class="table table-hover mb-0"><thead><tr><th>SKU</th><th>Product Name</th><th class="text-end">Stock</th><th>Status</th><th>Brand</th></tr></thead><tbody id="tableAll"></tbody></table>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="skuid">
+                <div class="card mt-3">
+                    <div class="card-header d-flex gap-2 py-3 flex-wrap">
+                        <input type="text" id="searchSku" placeholder="🔍 Search SKU..." class="form-control" style="max-width:200px" onkeyup="filterTable('sku')">
+                        <select id="filterSku" class="form-select" style="width:120px" onchange="filterTable('sku')"><option value="all">All Status</option><option value="zero">🚫 Zero (0)</option><option value="low">⚠️ Low (1-9)</option><option value="normal">🟢 Normal (10-49)</option><option value="high">🔵 High (50+)</option></select>
+                        <select id="brandSku" class="form-select" style="width:160px" onchange="filterTable('sku')"><option value="all">All Brands</option><option value="reagen">Reagen</option><option value="桂格">桂格</option><option value="可口可樂">可口可樂</option><option value="swisse">Swisse</option><option value="淳茶舍">淳茶舍</option><option value="卡倫">卡倫</option><option value="家樂牌">家樂牌</option><option value="維他">維他</option><option value="救世">救世</option><option value="飛雪">飛雪</option><option value="屈臣氏">屈臣氏</option><option value="便利通">便利通</option><option value="芬達">芬達</option><option value="海倫仙度絲">海倫仙度絲</option><option value="舒特膚">舒特膚</option><option value="津路">津路</option><option value="健肝素">健肝素</option><option value="雪碧">雪碧</option><option value="雀巢">雀巢</option><option value="動必骼">動必骼</option><option value="維特健靈 ">維特健靈 </option><option value="wholelove plus">WholeLove Plus</option><option value="農夫山泉">農夫山泉</option><option value="日本命力">日本命力</option><option value="五塔">五塔</option><option value="康萃樂">康萃樂</option><option value="生力">生力</option><option value="malee">Malee</option><option value="唯潔雅">唯潔雅</option><option value="olly">OLLY</option><option value="水動樂">水動樂</option><option value="新奇士">新奇士</option><option value="正安堂">正安堂</option><option value="和田">和田</option><option value="monster">MONSTER</option><option value="余仁生">余仁生</option><option value="g-niib">G-NiiB</option><option value="詩樂氏">詩樂氏</option><option value="滴露">滴露</option><option value="hong kong">Hong Kong</option><option value="pgut">PGut</option><option value="和興">和興</option><option value="藍妹">藍妹</option><option value="proven">PROVEN</option><option value="pantene">PANTENE</option><option value="pantene ">PANTENE </option><option value="御藥堂">御藥堂</option><option value="golden king">Golden King</option><option value="伊藤園">伊藤園</option><option value="holdbody">Holdbody</option><option value="return 回本">Return 回本</option><option value="均隆">均隆</option><option value="張權破痛油">張權破痛油</option><option value="whc">WHC</option><option value="口健樂">口健樂</option><option value="babo botanicals">Babo Botanicals</option><option value="mustela">Mustela</option><option value="ddrops">Ddrops</option><option value="日本大正肯得">日本大正肯得</option><option value="黄道益">黄道益</option><option value="安鼻靈">安鼻靈</option><option value="rejoice飄柔">Rejoice飄柔</option><option value="玉林牌">玉林牌</option><option value="施樂輝">施樂輝</option><option value="the globalab">the GLOBALab</option><option value="美德瑪">美德瑪</option><option value="善存">善存</option><option value="天喜堂">天喜堂</option><option value="善理療">善理療</option><option value="福星藥廠">福星藥廠</option><option value="樂多珠珠">樂多珠珠</option><option value="馬百良">馬百良</option><option value="樂敦">樂敦</option><option value="保心安">保心安</option><option value="ezerra">Ezerra</option><option value="橙樹">橙樹</option><option value="皇漢堂">皇漢堂</option><option value="衍生">衍生</option></select>
+                    </div>
+                    <div class="table-container">
+                        <table class="table table-hover mb-0"><thead><tr><th>SKU</th><th>Product Name</th><th class="text-end">Stock</th><th>Status</th><th>Brand</th></tr></thead><tbody id="tableSku"></tbody></table>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="brand">
+                <div class="card mt-3">
+                    <div class="table-container">
+                        <table class="table table-hover mb-0"><thead><tr><th>Brand</th><th class="text-center">Products</th><th class="text-end">Total Stock</th><th>HKTVmall</th></tr></thead><tbody></tbody></table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="category">
+                <div class="card mt-3">
+                    <div class="card-header py-3 d-flex gap-2 flex-wrap align-items-center">
+                        <span class="fw-bold">📦 By Category</span>
+                        <input type="text" id="categoryNameSearch" placeholder="🔍 Category Name..." class="form-control form-control-sm" style="width:150px" onkeyup="filterCategoryTable()">
+                        <select id="categoryFilter" class="form-select form-select-sm" style="width:180px" onchange="filterCategoryTable()">
+                            <option value="type">By Category Type (大類)</option>
+                            <option value="full">By Full Category Code (完整)</option>
+                        </select>
+                        <select id="onlineFilter" class="form-select form-select-sm" style="width:130px" onchange="filterCategoryTable()">
+                            <option value="">Online/Offline</option>
+                            <option value="online">Online</option>
+                            <option value="offline">Offline</option>
+                        </select>
+                        <select id="invisibleFilter" class="form-select form-select-sm" style="width:110px" onchange="filterCategoryTable()">
+                            <option value="">Invisible</option>
+                            <option value="Y">Y</option>
+                            <option value="N">N</option>
+                        </select>
+                        <select id="foosFilter" class="form-select form-select-sm" style="width:100px" onchange="filterCategoryTable()">
+                            <option value="">FOOS</option>
+                            <option value="Y">Y</option>
+                            <option value="N">N</option>
+                        </select>
+                        <span class="badge bg-secondary" id="categoryCount">4 category types</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="table table-hover mb-0" id="categoryTable">
+                            <thead>
+                                <tr>
+                                    <th id="catCol1">Category</th>
+                                    <th id="catCol2">Code</th>
+                                    <th class="text-center">Products</th>
+                                    <th class="text-end">Total Stock</th>
+                                    <th class="text-center">🚫 Zero</th>
+                                    <th class="text-center">⚠️ Low</th>
+                                    <th class="text-center">🟢 Normal</th>
+                                    <th class="text-center">🔵 High</th>
+                                    <th class="text-center">Online/Offline</th>
+                                    <th class="text-center">Invisible</th>
+                                    <th class="text-center">FOOS</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryTypeBody"></tbody>
+                            <tbody id="categoryFullBody" style="display:none"></tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <small>* 數據日期: 2026-08-08 (00:00:00) | Stock Level: Zero(0) / Low(1-9) / Normal(10-49) / High(50+)</small>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="skustatus">
+                <div class="row mt-3">
+        <!-- Online Status -->
+        <div class="col-md-4 mb-3">
+            <div class="card border-primary h-100">
+                <div class="card-header bg-primary text-white py-2 d-flex justify-content-between align-items-center">
+                    <span>🌐 Online Status</span>
+                    <span class="text-dark">318 online / 10 offline</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height:320px;overflow-y:auto">
+                        <table class="table table-hover table-sm mb-0">
+                            <thead style="position:sticky;top:0;background:#f8fafc;z-index:1">
+                                <tr><th>SKU</th><th>Product</th><th class="text-end">Stock</th><th>Status</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Invisible -->
+        <div class="col-md-4 mb-3">
+            <div class="card border-warning h-100">
+                <div class="card-header bg-warning text-dark py-2 d-flex justify-content-between align-items-center">
+                    <span>👁️ Invisible</span>
+                    <span class="text-dark">45 Y / 283 N</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height:320px;overflow-y:auto">
+                        <table class="table table-hover table-sm mb-0">
+                            <thead style="position:sticky;top:0;background:#f8fafc;z-index:1">
+                                <tr><th>SKU</th><th>Product</th><th class="text-end">Stock</th><th>Status</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Force Out Of Stock -->
+        <div class="col-md-4 mb-3">
+            <div class="card border-danger h-100">
+                <div class="card-header bg-danger text-white py-2 d-flex justify-content-between align-items-center">
+                    <span>🚫 Force OOS</span>
+                    <span class="text-dark">1 Y / 327 N</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height:320px;overflow-y:auto">
+                        <table class="table table-hover table-sm mb-0">
+                            <thead style="position:sticky;top:0;background:#f8fafc;z-index:1">
+                                <tr><th>SKU</th><th>Product</th><th class="text-end">Stock</th><th>Status</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div></div>
+            </div>
+            <div class="tab-pane fade" id="alerts">
+                <div class="row mt-3">
+                    <div class="col-md-6"><div class="card border-danger"><div class="card-header bg-danger text-white py-2">🚫 Zero Stock (67)</div><div class="table-container" style="max-height:400px"><table class="table table-hover mb-0"><thead><tr><th>SKU</th><th>Product</th><th class="text-end">Stock</th></tr></thead><tbody></tbody></table></div></div></div>
+                    <div class="col-md-6"><div class="card border-warning"><div class="card-header bg-warning text-dark py-2">⚠️ Low Stock (131)</div><div class="table-container" style="max-height:400px"><table class="table table-hover mb-0"><thead><tr><th>SKU</th><th>Product</th><th class="text-end">Stock</th></tr></thead><tbody></tbody></table></div></div></div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="newsku"><div class="card mt-3"><div class="card-header bg-warning text-dark py-2 d-flex gap-2 flex-wrap align-items-center">🆕 New SKU (20) <small class="text-muted ms-2">最新上架 14 日內</small><input type="text" id="searchNewSku" placeholder="🔍 Search SKU / Product..." class="form-control form-control-sm ms-auto" style="max-width:200px" onkeyup="filterNewSkuTable()"><select id="filterNewSkuStatus" class="form-select form-select-sm" style="width:130px" onchange="filterNewSkuTable();updateNewSkuBrands()"><option value="all">全部狀態</option><option value="zero">🚫 Zero (0)</option><option value="low">⚠️ Low (1-9)</option><option value="normal">🟢 Normal (10-49)</option><option value="high">🔵 High (50+)</option></select><select id="brandNewSku" class="form-select form-select-sm" style="width:160px" onchange="filterNewSkuTable()"><option value="all">All Brands</option><option value="reagen">Reagen</option><option value="桂格">桂格</option><option value="可口可樂">可口可樂</option><option value="swisse">Swisse</option><option value="淳茶舍">淳茶舍</option><option value="卡倫">卡倫</option><option value="家樂牌">家樂牌</option><option value="維他">維他</option><option value="救世">救世</option><option value="飛雪">飛雪</option><option value="屈臣氏">屈臣氏</option><option value="便利通">便利通</option><option value="芬達">芬達</option><option value="海倫仙度絲">海倫仙度絲</option><option value="舒特膚">舒特膚</option><option value="津路">津路</option><option value="健肝素">健肝素</option><option value="雪碧">雪碧</option><option value="雀巢">雀巢</option><option value="動必骼">動必骼</option><option value="維特健靈 ">維特健靈 </option><option value="wholelove plus">WholeLove Plus</option><option value="農夫山泉">農夫山泉</option><option value="日本命力">日本命力</option><option value="五塔">五塔</option><option value="康萃樂">康萃樂</option><option value="生力">生力</option><option value="malee">Malee</option><option value="唯潔雅">唯潔雅</option><option value="olly">OLLY</option><option value="水動樂">水動樂</option><option value="新奇士">新奇士</option><option value="正安堂">正安堂</option><option value="和田">和田</option><option value="monster">MONSTER</option><option value="余仁生">余仁生</option><option value="g-niib">G-NiiB</option><option value="詩樂氏">詩樂氏</option><option value="滴露">滴露</option><option value="hong kong">Hong Kong</option><option value="pgut">PGut</option><option value="和興">和興</option><option value="藍妹">藍妹</option><option value="proven">PROVEN</option><option value="pantene">PANTENE</option><option value="pantene ">PANTENE </option><option value="御藥堂">御藥堂</option><option value="golden king">Golden King</option><option value="伊藤園">伊藤園</option><option value="holdbody">Holdbody</option><option value="return 回本">Return 回本</option><option value="均隆">均隆</option><option value="張權破痛油">張權破痛油</option><option value="whc">WHC</option><option value="口健樂">口健樂</option><option value="babo botanicals">Babo Botanicals</option><option value="mustela">Mustela</option><option value="ddrops">Ddrops</option><option value="日本大正肯得">日本大正肯得</option><option value="黄道益">黄道益</option><option value="安鼻靈">安鼻靈</option><option value="rejoice飄柔">Rejoice飄柔</option><option value="玉林牌">玉林牌</option><option value="施樂輝">施樂輝</option><option value="the globalab">the GLOBALab</option><option value="美德瑪">美德瑪</option><option value="善存">善存</option><option value="天喜堂">天喜堂</option><option value="善理療">善理療</option><option value="福星藥廠">福星藥廠</option><option value="樂多珠珠">樂多珠珠</option><option value="馬百良">馬百良</option><option value="樂敦">樂敦</option><option value="保心安">保心安</option><option value="ezerra">Ezerra</option><option value="橙樹">橙樹</option><option value="皇漢堂">皇漢堂</option><option value="衍生">衍生</option></select></div><div class="table-container"><table class="table table-hover mb-0"><thead><tr><th>SKU</th><th>Product Name</th><th class="text-end">Stock</th><th>Status</th><th>Brand</th></tr></thead><tbody id="tableNewSku"></tbody></table></div></div></div>
+
+            <div class="tab-pane fade" id="pricecheck">
+                <div class="card mt-3">
+                    <div class="card-header py-3 d-flex gap-2 flex-wrap align-items-center">
+                        <span class="fw-bold">💰 Price Check (328)</span>
+                        <input type="text" id="searchPrice" placeholder="🔍 Search SKU / Brand..." class="form-control form-control-sm" style="width:200px" onkeyup="filterPriceTable()">
+                        <select id="filterPriceBrand" class="form-select form-select-sm" style="width:160px" onchange="filterPriceTable()"><option value="all">全部品牌</option><option value="Babo Botanicals">Babo Botanicals</option><option value="Ddrops">Ddrops</option><option value="Ezerra">Ezerra</option><option value="G-NiiB">G-NiiB</option><option value="Golden King">Golden King</option><option value="Holdbody">Holdbody</option><option value="Hong Kong">Hong Kong</option><option value="MONSTER">MONSTER</option><option value="Malee">Malee</option><option value="Mustela">Mustela</option><option value="OLLY">OLLY</option><option value="PANTENE">PANTENE</option><option value="PANTENE ">PANTENE </option><option value="PGut">PGut</option><option value="PROVEN">PROVEN</option><option value="Reagen">Reagen</option><option value="Rejoice飄柔">Rejoice飄柔</option><option value="Return 回本">Return 回本</option><option value="Swisse">Swisse</option><option value="WHC">WHC</option><option value="WholeLove Plus">WholeLove Plus</option><option value="the GLOBALab">the GLOBALab</option><option value="五塔">五塔</option><option value="伊藤園">伊藤園</option><option value="余仁生">余仁生</option><option value="便利通">便利通</option><option value="保心安">保心安</option><option value="健肝素">健肝素</option><option value="動必骼">動必骼</option><option value="卡倫">卡倫</option><option value="口健樂">口健樂</option><option value="可口可樂">可口可樂</option><option value="和田">和田</option><option value="和興">和興</option><option value="唯潔雅">唯潔雅</option><option value="善存">善存</option><option value="善理療">善理療</option><option value="均隆">均隆</option><option value="天喜堂">天喜堂</option><option value="安鼻靈">安鼻靈</option><option value="家樂牌">家樂牌</option><option value="屈臣氏">屈臣氏</option><option value="康萃樂">康萃樂</option><option value="張權破痛油">張權破痛油</option><option value="御藥堂">御藥堂</option><option value="救世">救世</option><option value="新奇士">新奇士</option><option value="施樂輝">施樂輝</option><option value="日本命力">日本命力</option><option value="日本大正肯得">日本大正肯得</option><option value="桂格">桂格</option><option value="樂多珠珠">樂多珠珠</option><option value="樂敦">樂敦</option><option value="橙樹">橙樹</option><option value="正安堂">正安堂</option><option value="水動樂">水動樂</option><option value="津路">津路</option><option value="海倫仙度絲">海倫仙度絲</option><option value="淳茶舍">淳茶舍</option><option value="滴露">滴露</option><option value="玉林牌">玉林牌</option><option value="生力">生力</option><option value="皇漢堂">皇漢堂</option><option value="福星藥廠">福星藥廠</option><option value="維他">維他</option><option value="維特健靈 ">維特健靈 </option><option value="美德瑪">美德瑪</option><option value="舒特膚">舒特膚</option><option value="芬達">芬達</option><option value="藍妹">藍妹</option><option value="衍生">衍生</option><option value="詩樂氏">詩樂氏</option><option value="農夫山泉">農夫山泉</option><option value="雀巢">雀巢</option><option value="雪碧">雪碧</option><option value="飛雪">飛雪</option><option value="馬百良">馬百良</option><option value="黄道益">黄道益</option></select>
+                        <select id="filterPrice" class="form-select form-select-sm" style="width:160px" onchange="filterPriceTable()">
+                            <option value="all">全部 All</option>
+                            <option value="up">😡 價格上升</option>
+                            <option value="down">😍 價格下跌</option>
+                            <option value="flat">➖ 無變動</option>
+                            <option value="none">— 暂无数据</option>
+                        </select>
+                    </div>
+                    <div class="table-container">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr><th>SKU</th><th>Brand</th><th>Product Name</th><th class="text-end">RSP</th><th class="text-end">PSP</th><th class="text-end">PNS</th><th class="text-end">惠康</th><th class="text-end">萬寧</th><th class="text-end">屈臣氏</th><th class="text-end">市場價</th><th class="text-center">走向</th><th class="text-center">變動</th><th>狀態</th></tr>
+                            </thead>
+                            <tbody id="tablePrice"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+    
+            
+            <div class="tab-pane fade" id="report">
+                <div class="card mt-3">
+                    <div class="card-header py-3">
+                        <span class="fw-bold">📋 Daily Inventory Report 下載</span>
+                        <small class="text-muted ms-2">每日最新版本 (10pm)</small>
+                    </div>
+                    <div class="table-container">
+                        <table class="table table-hover mb-0" style="table-layout:fixed">
+                            <colgroup>
+                                <col style="width:30%">
+                                <col style="width:20%">
+                                <col style="width:25%">
+                                <col style="width:25%">
+                            </colgroup>
+                            <thead>
+                                <tr><th>Date 日期</th><th class="text-center">時間</th><th class="text-end">SKU 數量</th><th>Download 下載</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header py-3">
+                        <span class="fw-bold">📦 Daily Order Report 下載</span>
+                        <small class="text-muted ms-2">每日銷售報告</small>
+                    </div>
+                    <div class="table-container">
+                        <table class="table table-hover mb-0" style="table-layout:fixed">
+                            <colgroup>
+                                <col style="width:30%">
+                                <col style="width:20%">
+                                <col style="width:25%">
+                                <col style="width:25%">
+                            </colgroup>
+                            <thead>
+                                <tr><th>Date 日期</th><th class="text-center">時間</th><th class="text-end">GMV</th><th>Download 下載</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+    
+<div class="tab-pane fade" id="salestrend">
+                <div class="card mt-3">
+                    <div class="card-header py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="fw-bold">📈 Sales Trend 銷售趨勢</span>
+                        <div class="d-flex gap-3 align-items-center">
+                            <span id="salesDateFilterRow">
+                            <select id="salesDateFilter" class="form-select form-select-sm" style="width:130px" onchange="filterSalesByDate()">
+                                <option value="">全部日期</option>
+                            </select>
+                            </span>
+                            <span id="salesMonthFilterRow">
+                            <select id="salesMonthFilter" class="form-select form-select-sm" style="width:120px" onchange="filterSalesByMonth()">
+                                <option value="">全部月份</option>
+                            </select>
+                            </span>
+                            <span id="salesYearFilterRow">
+                            <select id="salesYearFilter" class="form-select form-select-sm" style="width:100px" onchange="filterSalesByYear()">
+                                <option value="">全部年份</option>
+                            </select>
+                            </span>
+                            <span id="salesRangeFilterRow" style="display:none;">
+                                <input type="date" id="salesDateFrom" class="form-control form-control-sm" style="width:140px" onchange="filterSalesByDateRange()">
+                                <span class="text-muted">&mdash;</span>
+                                <input type="date" id="salesDateTo" class="form-control form-control-sm" style="width:140px" onchange="filterSalesByDateRange()">
+                            </span>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-flex gap-2 flex-wrap align-items-center">
+                                    <span id="stThisMonthLabel">當月 (---)</span>
+                                    <span class="text-success fw-bold">GMV $<span id="stTotalGMV">0</span></span>
+                                    <span class="badge bg-success">Orders <span id="stTotalOrders">0</span></span>
+                                    <span class="badge bg-warning text-dark">Avg $<span id="stAvgGMV">0</span></span>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap align-items-center">
+                                    <span id="stLastMonthLabel">上月 (---)</span>
+                                    <span class="text-success fw-bold">GMV $<span id="stLastGMV">0</span></span>
+                                    <span class="badge bg-success">Orders <span id="stLastOrders">0</span></span>
+                                    <span class="badge bg-warning text-dark">Avg $<span id="stLastAvg">0</span></span>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap align-items-center">
+                                    <span id="stMonthBeforeLastLabel">上上月 (---)</span>
+                                    <span class="text-success fw-bold">GMV $<span id="stMonthBeforeLastGMV">0</span></span>
+                                    <span class="badge bg-success">Orders <span id="stMonthBeforeLastOrders">0</span></span>
+                                    <span class="badge bg-warning text-dark">Avg $<span id="stMonthBeforeLastAvg">0</span></span>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Chart Navigation -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div class="jp-btn-nav" id="salesChartNav">
+                                    <button type="button" class="jp-btn active" onclick="switchSalesChart('gmvByDate', this)">1. GMV by Date</button>
+                                    <button type="button" class="jp-btn" onclick="switchSalesChart('gmvByMonth', this)">2. GMV by Monthly</button>
+                                    <button type="button" class="jp-btn" onclick="switchSalesChart('gmvByHour', this)">3. GMV by Hour</button>
+                                    <button type="button" class="jp-btn" onclick="switchSalesChart('gmvByDayOfWeek', this)">4. GMV by Day of Week</button>
+                                    <button type="button" class="jp-btn" onclick="switchSalesChart('gmvBySkuDaily', this)">5. GMV by SKU (Daily)</button>
+                                    <button type="button" class="jp-btn" onclick="switchSalesChart('gmvBySkuMonthly', this)">6. GMV by SKU (Monthly)</button>
+                                    <button type="button" class="jp-btn" onclick="switchSalesChart('qtyBySkuDaily', this)">7. Qty by SKU (Daily)</button>
+                                    <button type="button" class="jp-btn" onclick="switchSalesChart('qtyBySkuMonthly', this)">8. Qty by SKU (Monthly)</button>
+                                    <button type="button" class="jp-btn" onclick="switchSalesChart('gmvByBrandDaily', this)">9. GMV by Brand (Daily)</button>
+                                    <button type="button" class="jp-btn" onclick="switchSalesChart('gmvByBrandMonthly', this)">10. GMV by Brand (Monthly)</button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Chart Display -->
+                        <div class="chart-container" style="position: relative; height: 400px;">
+                            <canvas id="salesTrendChart"></canvas>
+                        </div>
+                        <div id="salesTableContainer" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4 text-muted"><small>H8391001 Inventory | Exchange Portal | Auto-updated by Hermes Agent</small></div>
     </div>
+    <div class="detail-modal" id="detailModal"><div class="detail-card"><h4 id="modalTitle" class="mb-3"></h4><p id="modalContent"></p><div class="text-end"><button class="btn btn-secondary" onclick="closeModal()">Close</button></div></div></div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function switchTab(t){document.querySelector('[data-bs-target="#'+t+'"]').click()}
+        function showDetail(sku,name,inv,status){
+            const L={'zero':'🚫 Zero','low':'⚠️ Low','normal':'🟢 Normal','high':'🔵 High'};
+            document.getElementById('modalTitle').textContent=name;
+            document.getElementById('modalContent').innerHTML='<table class="table"><tr><td><strong>SKU</strong></td><td><code>'+sku+'</code></td></tr><tr><td><strong>Stock</strong></td><td>'+inv.toLocaleString()+'</td></tr><tr><td><strong>Status</strong></td><td>'+L[status]+'</td></tr></table>';
+            document.getElementById('detailModal').classList.add('show');
+        }
+        function closeModal(){document.getElementById('detailModal').classList.remove('show')}
+        document.getElementById('detailModal').addEventListener('click',function(e){if(e.target===this)closeModal()});
+        const BUILD_VERSION = '2026-08-09 10:09:23';
+        // Check cron job update every 30s — auto-reload only if version changed
+        function checkVersion() {
+            fetch('/H8391001-Inventory-Dashboard/version.json?' + Date.now())
+                .then(r => r.json())
+                .then(v => {
+                    if (v.build_ts && v.build_ts !== 1786241363) {
+                        console.log('New cron build detected: ' + v.build_time + ' — reloading...');
+                        location.reload();
+                    }
+                })
+                .catch(() => {}); // ignore fetch errors
+        }
+        setInterval(checkVersion, 30000);
+        function filterTable(type){
+            let s=document.getElementById(type==='all'?'searchAll':'searchSku').value.toLowerCase();
+            let fEl=document.getElementById(type==='all'?'filterAll':'filterSku');
+            let f=fEl?fEl.value:'all';
+            let bEl=document.getElementById(type==='all'?'brandAll':'brandSku');
+            let brandFilter=bEl?bEl.value:'all';
+            let tbody=document.getElementById(type==='all'?'tableAll':'tableSku');
+            if(!tbody)return;
+            tbody.querySelectorAll('tr').forEach(r=>{
+                let show=r.textContent.toLowerCase().includes(s);
+                if(f!=='all'&&r.cells[3]&&!r.cells[3].textContent.toLowerCase().includes(f))show=false;
+                if(brandFilter!=='all'&&r.dataset.brand!==brandFilter)show=false;
+                r.style.display=show?'':'none';
+            });
+        }
+        function filterNewSkuTable(){
+            let s=document.getElementById('searchNewSku').value.toLowerCase();
+            let fEl=document.getElementById('filterNewSkuStatus');
+            let f=fEl?fEl.value:'all';
+            let bEl=document.getElementById('brandNewSku');
+            let brandFilter=bEl?bEl.value:'all';
+            let tbody=document.getElementById('tableNewSku');
+            if(!tbody)return;
+            tbody.querySelectorAll('tr').forEach(r=>{
+                let show=r.textContent.toLowerCase().includes(s);
+                if(f!=='all'&&r.cells[3]&&!r.cells[3].textContent.toLowerCase().includes(f))show=false;
+                if(brandFilter!=='all'&&r.dataset.brand!==brandFilter)show=false;
+                r.style.display=show?'':'none';
+            });
+        }
+        function updateNewSkuBrands(){
+            let fEl=document.getElementById('filterNewSkuStatus');
+            let f=fEl?fEl.value:'all';
+            let tbody=document.getElementById('tableNewSku');
+            if(!tbody)return;
+            let brands=new Set();
+            tbody.querySelectorAll('tr').forEach(r=>{
+                let match=true;
+                if(f!=='all'&&r.cells[3]&&!r.cells[3].textContent.toLowerCase().includes(f))match=false;
+                if(match&&r.dataset.brand)brands.add(r.dataset.brand);
+            });
+            let bEl=document.getElementById('brandNewSku');
+            let currentBrand=bEl?bEl.value:'all';
+            bEl.innerHTML='<option value="all">All Brands</option>';
+            let sorted=[...brands].sort();
+            sorted.forEach(b=>{bEl.innerHTML+=`<option value="${b}">${b}</option>`});
+            if(currentBrand!=='all'&&brands.has(currentBrand))bEl.value=currentBrand;
+        }
+        function filterCategoryTable(){
+            const select = document.getElementById('categoryFilter');
+            const view = select.value;
+            const typeBody = document.getElementById('categoryTypeBody');
+            const fullBody = document.getElementById('categoryFullBody');
+            const col1 = document.getElementById('catCol1');
+            const col2 = document.getElementById('catCol2');
+            const categoryCount = document.getElementById('categoryCount');
+
+            const onlineFilter = document.getElementById('onlineFilter')?.value || '';
+            const invisibleFilter = document.getElementById('invisibleFilter')?.value || '';
+            const foosFilter = document.getElementById('foosFilter')?.value || '';
+            const nameSearch = document.getElementById('categoryNameSearch')?.value.toLowerCase() || '';
+
+            if (view === 'type') {
+                typeBody.style.display = '';
+                fullBody.style.display = 'none';
+                col1.textContent = 'Category';
+                col2.textContent = 'Code';
+                if(categoryCount) categoryCount.textContent = typeBody.querySelectorAll('tr').length + ' category types';
+            } else {
+                typeBody.style.display = 'none';
+                fullBody.style.display = '';
+                col1.textContent = 'Primary Category Code';
+                col2.textContent = 'Primary Category Name (CHI)';
+                if(categoryCount) categoryCount.textContent = fullBody.querySelectorAll('tr').length + ' categories';
+
+                const rows = fullBody.querySelectorAll('tr');
+                rows.forEach(row => {
+                    let show = true;
+
+                    if (nameSearch) {
+                        const catName = row.cells[1]?.textContent.toLowerCase() || '';
+                        if (!catName.includes(nameSearch)) show = false;
+                    }
+
+                    if (onlineFilter) {
+                        const online = row.dataset.online || '';
+                        if (onlineFilter === 'online' && online !== 'online') show = false;
+                        if (onlineFilter === 'offline' && online !== 'offline') show = false;
+                    }
+
+                    if (invisibleFilter) {
+                        const inv = row.dataset.invisible || '';
+                        if (inv !== invisibleFilter) show = false;
+                    }
+
+                    if (foosFilter) {
+                        const foos = row.dataset.foos || '';
+                        if (foos !== foosFilter) show = false;
+                    }
+
+                    row.style.display = show ? '' : 'none';
+                });
+            }
+        }
+        function filterPriceTable(){
+            const searchInput = document.getElementById('searchPrice');
+            const filterSelect = document.getElementById('filterPrice');
+            const brandSelect = document.getElementById('filterPriceBrand');
+            const tbody = document.getElementById('tablePrice');
+            if(!tbody) return;
+            const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const filter = filterSelect ? filterSelect.value : 'all';
+            const brandFilter = brandSelect ? brandSelect.value : 'all';
+            tbody.querySelectorAll('tr').forEach(row => {
+                const rowBrand = row.getAttribute('data-brand') || '';
+                const pricedelta = row.getAttribute('data-pricedelta') || 'none';
+                const text = row.textContent.toLowerCase();
+                let show = true;
+                // Text search: match SKU or brand
+                if (search && !text.includes(search) && !rowBrand.toLowerCase().includes(search)) show = false;
+                // Brand dropdown filter
+                if (brandFilter !== 'all' && rowBrand !== brandFilter) show = false;
+                // Price change dropdown filter
+                if (filter !== 'all') {
+                    if (filter === 'up' && pricedelta !== 'up') show = false;
+                    if (filter === 'down' && pricedelta !== 'down') show = false;
+                    if (filter === 'flat' && pricedelta !== 'flat') show = false;
+                    if (filter === 'none' && pricedelta !== 'none') show = false;
+                }
+                row.style.display = show ? '' : 'none';
+            });
+        }
+        
+    // Sales Trend Data (embedded from order reports)
+    const salesTrendData = {
+    "sku_name_map": {},
+    "sku_brand_map": {},
+    "gmv_by_date": {"labels": [], "data": []},
+    "gmv_by_month": {"labels": [], "data": []},
+    "gmv_by_hour": {"labels": [], "data": []},
+    "gmv_by_day_of_week": {"labels": [], "data": []},
+    "gmv_by_sku_daily": {"labels": [], "skus": [], "data": []},
+    "gmv_by_sku_monthly": {"labels": [], "skus": [], "data": []},
+    "qty_by_sku_daily": {"labels": [], "skus": [], "data": []},
+    "qty_by_sku_monthly": {"labels": [], "skus": [], "data": []},
+    "gmv_by_brand_daily": {"labels": [], "brands": [], "data": []},
+    "gmv_by_brand_monthly": {"labels": [], "brands": [], "data": []}
+};
+    let priceTrendChartInstance = null;
+    function showPriceTrend(sku, name) {
+        document.getElementById('ptmTitle').textContent = name ? name : sku;
+        const records = priceHistoryData[sku];
+        const modal = document.getElementById('priceTrendModal');
+        const noData = document.getElementById('ptmNoData');
+        const canvas = document.getElementById('priceTrendChart');
+        modal.style.display = 'flex';
+
+        if (!records || records.length === 0) {
+            noData.style.display = 'block';
+            canvas.style.display = 'none';
+            return;
+        }
+        noData.style.display = 'none';
+        canvas.style.display = 'block';
+
+        const labels = records.map(r => r.date);
+        const pspData = records.map(r => r.psp);
+        const rspData = records.map(r => r.rsp);
+
+        if (priceTrendChartInstance) {
+            priceTrendChartInstance.destroy();
+        }
+        priceTrendChartInstance = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: '紅價 (PSP)',
+                        data: pspData,
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220,38,38,0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        spanGaps: true,
+                    },
+                    {
+                        label: '黑價 (RSP)',
+                        data: rspData,
+                        borderColor: '#1e40af',
+                        backgroundColor: 'rgba(30,64,175,0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        spanGaps: true,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: { display: false },
+                },
+                scales: {
+                    x: { ticks: { maxTicksLimit: 12 } },
+                    y: { ticks: { callback: v => '$' + v.toFixed(2) } }
+                }
+            }
+        });
+    }
+    function closePriceTrend() {
+        document.getElementById('priceTrendModal').style.display = 'none';
+        if (priceTrendChartInstance) {
+            priceTrendChartInstance.destroy();
+            priceTrendChartInstance = null;
+        }
+    }
+    function updatePriceDelta() {
+        if (typeof priceHistoryData === 'undefined') return;
+        Object.keys(priceHistoryData).forEach(function(sku) {
+            const cell = document.getElementById('priceDelta_' + sku);
+            if (!cell) return;
+            const records = priceHistoryData[sku];
+            if (!records || records.length < 2) {
+                cell.textContent = '—';
+                cell.className = 'text-center text-muted';
+                return;
+            }
+            const latest = records[records.length - 1];
+            const previous = records[records.length - 2];
+            const latestPrice = (latest.psp != null && latest.psp > 0) ? latest.psp : latest.rsp;
+            const prevPrice = (previous.psp != null && previous.psp > 0) ? previous.psp : previous.rsp;
+            if (latestPrice == null || prevPrice == null) {
+                cell.textContent = '—';
+                cell.className = 'text-center text-muted';
+                return;
+            }
+            if (latestPrice > prevPrice) {
+                cell.textContent = '😡';
+                cell.className = 'text-center text-danger fw-bold';
+                cell.title = '昨日$' + prevPrice.toFixed(2) + ' → 今日$' + latestPrice.toFixed(2);
+                if (cell.closest('tr')) cell.closest('tr').setAttribute('data-pricedelta', 'up');
+            } else if (latestPrice < prevPrice) {
+                cell.textContent = '😍';
+                cell.className = 'text-center text-success fw-bold';
+                cell.title = '昨日$' + prevPrice.toFixed(2) + ' → 今日$' + latestPrice.toFixed(2);
+                if (cell.closest('tr')) cell.closest('tr').setAttribute('data-pricedelta', 'down');
+            } else {
+                cell.textContent = '➖';
+                cell.className = 'text-center text-muted';
+                cell.title = '昨日$' + prevPrice.toFixed(2) + ' → 今日$' + latestPrice.toFixed(2);
+                if (cell.closest('tr')) cell.closest('tr').setAttribute('data-pricedelta', 'flat');
+            }
+        });
+    }
+    updatePriceDelta();
+    document.getElementById('priceTrendModal').addEventListener('click', function(e) {
+        if (e.target === this) closePriceTrend();
+    });
+    </script>
 </body>
 </html>
