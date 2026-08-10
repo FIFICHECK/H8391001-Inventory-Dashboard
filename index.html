@@ -80,8 +80,8 @@
                     <div>
                         <h2 class="mb-1">🌿 H8391001 Store Dashboard</h2>
                         <p class="mb-0 opacity-75">THANN</p>
-                        <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:4px">📅 Inventory Report: 2026-08-05&nbsp;|&nbsp; 🔄 2026-08-10 10:00:21</p>
-                        <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:2px">📅 Order Report: N/A|&nbsp; 🔄 2026-08-10 10:00:21</p>
+                        <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:4px">📅 Inventory Report: 2026-08-05&nbsp;|&nbsp; 🔄 2026-08-10 10:16:23</p>
+                        <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:2px">📅 Order Report: N/A|&nbsp; 🔄 2026-08-10 10:16:23</p>
                     </div>
                     <span id="countdownDisplay" style="color:rgba(255,255,255,0.9);font-size:0.85rem;font-weight:500" title="Auto-refresh when cron job completes">🔄 Cron</span>
                 </div>
@@ -105,7 +105,7 @@
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#skustatus">📊 By SKU Status</button></li>
             <li class="nav-item"><button class="nav-link text-danger" data-bs-toggle="tab" data-bs-target="#alerts">⚠️ Alerts (372)</button></li>
             <li class="nav-item"><button class="nav-link text-warning" data-bs-toggle="tab" data-bs-target="#newsku">🆕 New SKU (0)</button></li>
-            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pricecheck">💰 Price Check (447)</button></li>
+            <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#pricecheck">💰 Price Check (81)</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#report">📋 Report</button></li>
             <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#salestrend">📈 Sales Trend</button></li>
         </ul>
@@ -2229,7 +2229,7 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
                 ? '<a href="' + r.official_url + '" target="_blank" class="text-decoration-none fw-bold" title="' + (r.official_name || '') + '">' + fmtPrice(r.official_price) + '</a>'
                 : '<span class="text-muted">—</span>';
             const diffCell = off ? fmtDiff(r.diff) : '<span class="text-muted">—</span>';
-            const skuLink = '<a href="https://www.hktvmall.com/hktv/p/' + r.sku + '" target="_blank"><code>' + r.sku.replace('H8391001_S_', '') + '</code></a>';
+            const skuLink = '<a href="https://www.hktvmall.com/hktv/p/' + r.sku + '" target="_blank"><code>' + r.sku + '</code></a>';
             return '<tr data-brand="' + (r.brand || '') + '" data-pricedelta="none">'
                 + '<td>' + skuLink + '</td>'
                 + '<td>' + (r.brand || '—') + '</td>'
