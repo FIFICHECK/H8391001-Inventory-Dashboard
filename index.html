@@ -963,6 +963,7 @@
                 <div class="card mt-3">
                     <div class="card-header py-3 d-flex gap-2 flex-wrap align-items-center">
                         <span class="fw-bold">💰 Price Check</span>
+                        <small id="priceCheckSub" class="text-muted ms-2">全部 SKUs（跟庫存報表）</small>
                         <input type="text" id="searchPrice" placeholder="🔍 Search SKU / Brand..." class="form-control form-control-sm" style="width:200px" onkeyup="filterPriceTable()">
                         <select id="filterPriceBrand" class="form-select form-select-sm" style="width:160px" onchange="filterPriceTable()"><option value="all">全部品牌</option></select>
                         <select id="filterPrice" class="form-select form-select-sm" style="width:160px" onchange="filterPriceTable()">
@@ -2244,7 +2245,10 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
         }).join('');
         const matched = priceCheckData.filter(r => r.official_price !== null && r.official_price !== undefined).length;
         const tab = document.querySelector('[data-bs-target="#pricecheck"]');
-        if (tab) tab.textContent = '💰 Price Check (' + matched + '/' + priceCheckData.length + ')';
+        if (tab) tab.textContent = '💰 Price Check (' + priceCheckData.length + ')';
+        // Update subtitle: how many have official THANN price
+        const sub = document.getElementById('priceCheckSub');
+        if (sub) sub.textContent = '全部 ' + priceCheckData.length + ' SKUs（跟庫存報表）· ' + matched + ' 個有 THANN 官網對比';
     }
     async function loadPriceCheck() {
         try {
