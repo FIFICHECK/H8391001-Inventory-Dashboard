@@ -5573,6 +5573,8 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
             console.error('loadPspHistory failed', e);
             pspHistory = {};
         }
+        // Re-render so 走向 column shows trend links (history may have loaded after first render)
+        renderPriceCheck();
     }
     loadPspHistory();
     loadPriceCheck();
