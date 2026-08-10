@@ -37018,10 +37018,7 @@
                         // Extract filtered labels and rows
             const filteredLabels = filteredIndices.map(i => rawData.labels[i]);
             const filteredData = filteredIndices.map(i => rawData.data[i]);
-            // FIX: Detect [sku_idx][month/date_idx] transposed data and transpose to [month/date_idx][sku_idx]
-            if (filteredData.length > 1 && filteredData[0].length === 1) {
-                filteredData = filteredData[0].map((_, c) => filteredData.map(r => r[c]));
-            }
+            // NOTE: data is already [dateIndex][skuIndex] orientation from regenerate_sales_trend.py
             data = { labels: filteredLabels, skus: rawData.skus, brands: rawData.brands, data: filteredData, isMultiDataset: true };
                     } else {
             const filtered = getFilteredData(rawData.data, rawData.labels, chartName);
