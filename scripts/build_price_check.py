@@ -60,6 +60,11 @@ def main():
     # SKUs that are ONLINE in the inventory report)
     inv = [r for r in inv if str(r.get('status', '')).upper() == 'ONLINE']
     print(f'🔍 Filtered to ONLINE SKUs only: {len(inv)} rows')
+
+    # A price counts only if it's a positive number (0 = no price set, skip)
+    def valid_price(p):
+        return p is not None and isinstance(p, (int, float)) and p > 0
+
     with open('data/thann_official_prices.json', encoding='utf-8') as f:
         official = json.load(f)
 
@@ -96,9 +101,6 @@ def main():
                 prefix += 1
             op = official[osku]
             # Compare price: prefer PSP (discount price), fall back to RSP (original price)
-            # Only use a price if it's a positive number (0 = no price set, skip)
-            def valid_price(p):
-                return p is not None and isinstance(p, (int, float)) and p > 0
             compare_price = row['psp'] if valid_price(row['psp']) else (row['rsp'] if valid_price(row['rsp']) else None)
             diff = round(compare_price - op['price'], 2) if compare_price is not None and op['price'] else None
             row['official_sku'] = osku
@@ -122,8 +124,10 @@ def main():
     with open('data/price_check_data.json', 'w', encoding='utf-8') as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
-    # Record PSP price history for 走向 (trend) chart
+    # Record price history for 走向 (trend) chart — PSP preferred, RSP fallback
     # psp_history.json: { "H8391001_S_XXX": { "2026-08-05": 96.0, "2026-08-10": 100.0 }, ... }
+    # If PSP is missing/invalid (>0 required), record RSP instead so the trend
+    # chart still has data (user requirement 2026-08-11).
     from datetime import date
     today = date.today().isoformat()
     hist_path = 'data/psp_history.json'
@@ -134,14 +138,17 @@ def main():
         history = {}
     for r in output:
         sku = r['sku']
-        if r.get('psp') is not None and isinstance(r.get('psp'), (int, float)) and r['psp'] > 0:
+        # PSP first; if PSP is not a valid positive price, fall back to RSP
+        trend_price = r.get('psp') if valid_price(r.get('psp')) else (r.get('rsp') if valid_price(r.get('rsp')) else None)
+        if trend_price is not None:
             if sku not in history:
                 history[sku] = {}
-            history[sku][today] = round(r['psp'], 2)
+            history[sku][today] = round(trend_price, 2)
     with open(hist_path, 'w', encoding='utf-8') as f:
         json.dump(history, f, ensure_ascii=False, indent=2)
     n_hist = sum(1 for v in history.values() if today in v)
-    print(f'📈 PSP history updated: {n_hist} SKUs recorded for {today} (total {len(history)} SKUs tracked)')
+    n_rsp_hist = sum(1 for r in output if r.get('psp') is None and valid_price(r.get('rsp')) and r['sku'] in history and today in history[r['sku']])
+    print(f'📈 price history updated: {n_hist} SKUs recorded for {today} ({n_rsp_hist} via RSP fallback; total {len(history)} SKUs tracked)')
 
     print(f"Total: {len(output)} | exact: {exact} | prefix: {prefix} | no-match: {none}")
     if prefix_details:
