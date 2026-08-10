@@ -240,9 +240,20 @@ def main():
     try:
         order_files = [f for f in os.listdir('reports/order_reports') if f.lower().endswith('.xlsx')]
         if order_files:
-            newest = max(order_files, key=lambda f: os.path.getmtime(os.path.join('reports/order_reports', f)))
-            mtime = datetime.fromtimestamp(os.path.getmtime(os.path.join('reports/order_reports', newest)))
-            order_report_date_str = mtime.strftime('%Y-%m-%d (%H:%M:%S)')
+            # Parse date from filename: ECOM-EXCH_DAILY_ORDER_H8391001_YYYYMMDD235959.xlsx
+            import re as _re
+            order_files_dates = []
+            for f in order_files:
+                m = _re.search(r'_(\d{8})235959\.xlsx$', f)
+                if m:
+                    order_files_dates.append((f, m.group(1)))
+            if order_files_dates:
+                newest, latest_date_str = max(order_files_dates, key=lambda x: x[1])
+                try:
+                    latest_dt = datetime.strptime(latest_date_str, '%Y%m%d')
+                    order_report_date_str = latest_dt.strftime('%Y-%m-%d') + ' (23:59:59)'
+                except ValueError:
+                    order_report_date_str = 'N/A'
     except Exception:
         pass
     print(f'📦 Order report date: {order_report_date_str}')
