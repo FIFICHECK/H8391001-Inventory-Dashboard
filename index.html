@@ -35714,12 +35714,10 @@
             if (currentYearFilter) {
                 filteredMonths = [...new Set(dates.filter(d => d.startsWith(currentYearFilter)).map(d => d.substring(0, 7)))].sort().reverse();
             } else {
-                // Use available_months (always current + 2 previous calendar months)
-                                filteredMonths = salesTrendData.available_months || salesTrendData.gmv_by_month.labels || [];
-
+                // Use all available months from data (full history)
+                filteredMonths = [...new Set((salesTrendData.gmv_by_month.labels || []).concat(dates.map(d => d.substring(0, 7))))].sort().reverse();
             }
-            // Always show max 3 months (current + 2 previous)
-            filteredMonths = filteredMonths.slice(0, 3);
+            // Show all months available in data (no artificial 3-month cap)
             filteredMonths.forEach(m => {
                 const opt = document.createElement('option'); opt.value = m; opt.textContent = m;
                 monthSelect.appendChild(opt);
