@@ -1,0 +1,351 @@
+#!/usr/bin/env python3
+"""H8391001 Inventory Dashboard Generator
+Reads data/inventory_all.csv (447 SKUs) and fills ALL tabs of index.html:
+- KPI cards, tab labels, header dates
+- tableAll / tableSku / Brand / Category Type / Category Full
+- SKU Status cards (Online / Invisible / Force OOS)
+- Alerts (Zero / Low) / New SKU
+Price Check tab is rendered dynamically from price_check_data.json (unchanged).
+"""
+import csv
+import json
+import os
+import re
+import sys
+from collections import defaultdict
+from datetime import datetime, timedelta
+from urllib.parse import quote
+
+REPO = os.path.expanduser('~/H8391001-Inventory-Dashboard')
+os.chdir(REPO)
+
+INDEX = 'index.html'
+CSV_PATH = 'data/inventory_all.csv'
+PRICE_CHECK = 'data/price_check_data.json'
+
+CATEGORY_TYPE_MAPPING = {
+    "AA11": "超級市場",
+    "AA13": "個人護理",
+    "AA16": "健康及醫療用品",
+    "AA18": "美容化妝",
+    "AA32": "家電及電子產品",
+}
+
+def load_rows():
+    rows = []
+    with open(CSV_PATH, encoding='utf-8-sig') as f:
+        for r in csv.DictReader(f):
+            sku = (r.get('Merchant SKU ID') or '').strip()
+            if not sku:
+                continue
+            rows.append({
+                'sku': sku,
+                'name': (r.get('SKU Name') or '').strip(),
+                'name_chi': (r.get('SKU Name (Chi)') or '').strip(),
+                'stock': int(float((r.get('StockLevel') or 0) or 0)),
+                'online': (r.get('Online Status') or '').strip().upper(),
+                'invisible': (r.get('Invisible') or '').strip().upper(),
+                'foos': (r.get('Force Out Of Stock') or '').strip().upper(),
+                'brand': (r.get('Brand Name (EN)') or '').strip() or 'Unknown',
+                'cat_code': (r.get('Primary Category Code') or '').strip(),
+                'cat_name': (r.get('Primary Category Name (CHI)') or '').strip(),
+                'create_date': (r.get('Create Date') or '').strip(),
+            })
+    return rows
+
+def get_status(inv):
+    if inv == 0:
+        return 'zero', '🚫 Zero (0)'
+    elif inv < 10:
+        return 'low', '⚠️ Low (1-9)'
+    elif inv < 50:
+        return 'normal', '🟢 Normal (10-49)'
+    return 'high', '🔵 High (50+)'
+
+def esc(s, limit=70):
+    s = str(s)[:limit]
+    return s.replace("'", "&apos;").replace('"', '&quot;')
+
+def sku_row(row, show_brand=True, is_new=False):
+    sku = esc(row['sku'], 25)
+    name = esc(row['name'])
+    inv = row['stock']
+    cls, label = get_status(inv)
+    badge = f'<span class="badge badge-{cls}">{label}</span>'
+    new_badge = '<span class="badge badge-new" style="background:#FF6B35;color:white;margin-left:4px;">🆕 New</span>' if is_new else ''
+    brand_lower = row['brand'].lower().replace('"', '&quot;')
+    sku_url = f"https://www.hktvmall.com/hktv/p/{row['sku'].replace(' ', '')}"
+    onclick = f"showDetail('{sku}',\"{name}\",{inv},'{cls}')"
+    brand_html = f'<td class="text-muted" style="font-size:0.75rem">{esc(row["brand"], 30)}</td>' if show_brand else ''
+    return (f'<tr data-brand="{brand_lower}" onclick="{onclick}">'
+            f'<td><a href="{sku_url}" target="_blank" onclick="event.stopPropagation()"><code>{sku}</code></a></td>'
+            f'<td title="{name}">{name[:55]}{"..." if len(name) > 55 else ""}</td>'
+            f'<td class="text-end">{inv:,}</td><td>{badge}{new_badge}</td>{brand_html}</tr>')
+
+def status_card_row(row):
+    sku = esc(row['sku'], 25)
+    name = esc(row['name'])
+    inv = row['stock']
+    cls, label = get_status(inv)
+    badge = f'<span class="badge badge-{cls}">{label}</span>'
+    sku_url = f"https://www.hktvmall.com/hktv/p/{row['sku'].replace(' ', '')}"
+    onclick = f"showDetail('{sku}',\"{name}\",{inv},'{cls}')"
+    return (f'<tr onclick="{onclick}">'
+            f'<td><a href="{sku_url}" target="_blank" onclick="event.stopPropagation()"><code>{sku}</code></a></td>'
+            f'<td title="{name}">{name[:55]}{"..." if len(name) > 55 else ""}</td>'
+            f'<td class="text-end">{inv:,}</td><td>{badge}</td></tr>')
+
+def main():
+    rows = load_rows()
+    print(f'📊 Loaded {len(rows)} SKUs from {CSV_PATH}')
+
+    # ---- derived stats ----
+    total_products = len(rows)
+    total_stock = sum(r['stock'] for r in rows)
+    zero_count = sum(1 for r in rows if r['stock'] == 0)
+    low_count = sum(1 for r in rows if 0 < r['stock'] < 10)
+    normal_count = sum(1 for r in rows if 10 <= r['stock'] < 50)
+    high_count = sum(1 for r in rows if r['stock'] >= 50)
+    online_count = sum(1 for r in rows if r['online'] == 'ONLINE')
+    offline_count = total_products - online_count
+    inv_y = sum(1 for r in rows if r['invisible'] == 'Y')
+    inv_n = total_products - inv_y
+    foos_y = sum(1 for r in rows if r['foos'] == 'Y')
+    foos_n = total_products - foos_y
+
+    # NEW SKU detection (14 days)
+    NEW_DAYS = 14
+    cutoff = datetime.now() - timedelta(days=NEW_DAYS)
+    new_skus = set()
+    for r in rows:
+        cd = r['create_date']
+        if not cd or cd == 'nan':
+            continue
+        try:
+            if datetime.strptime(cd, '%d-%b-%Y') >= cutoff:
+                new_skus.add(r['sku'])
+        except ValueError:
+            pass
+    new_sku_count = len(new_skus)
+    print(f'🆕 New SKUs (within {NEW_DAYS}d): {new_sku_count}')
+
+    # ---- Build rows ----
+    all_rows = ''.join(sku_row(r, is_new=r['sku'] in new_skus) for r in sorted(rows, key=lambda x: x['stock'], reverse=True))
+    online_rows = ''.join(sku_row(r, is_new=r['sku'] in new_skus) for r in sorted((x for x in rows if x['online'] == 'ONLINE'), key=lambda x: x['stock'], reverse=True))
+    zero_rows = ''.join(status_card_row(r) for r in sorted((x for x in rows if x['stock'] == 0), key=lambda x: x['name']))
+    low_rows = ''.join(status_card_row(r) for r in sorted((x for x in rows if 0 < x['stock'] < 10), key=lambda x: x['stock']))
+    new_sku_rows = ''.join(sku_row(r, is_new=True) for r in sorted((x for x in rows if x['sku'] in new_skus), key=lambda x: x['stock'], reverse=True)) if new_skus else ''
+
+    # Brand summary
+    brand_summary = defaultdict(lambda: {'count': 0, 'stock': 0})
+    for r in rows:
+        b = r['brand'] if r['brand'] != 'Unknown' or r['sku'] else r['brand']
+        brand_summary[b]['count'] += 1
+        brand_summary[b]['stock'] += r['stock']
+    brand_rows_html = ''
+    for b, d in sorted(brand_summary.items(), key=lambda x: x[1]['stock'], reverse=True)[:50]:
+        hktv_url = f'https://www.hktvmall.com/hktv/s/H8391001?page=0&q=%3Arelevance%3Abrand%3A{quote(b, safe="")}%3Astreet%3Amain%3Astore%3AH8391001%3A'
+        brand_rows_html += f'<tr><td><strong>{esc(b, 30)}</strong></td><td class="text-center">{d["count"]}</td><td class="text-end">{d["stock"]:,}</td><td><a href="{hktv_url}" target="_blank" class="btn btn-sm btn-outline-primary">🔍 HKTVmall</a></td></tr>'
+
+    # Category data
+    cat_type = defaultdict(lambda: {'name': '', 'products': 0, 'stock': 0, 'zero': 0, 'low': 0, 'normal': 0, 'high': 0, 'online': 0, 'offline': 0, 'inv_y': 0, 'foos_y': 0})
+    cat_full = defaultdict(lambda: {'name': '', 'products': 0, 'stock': 0, 'zero': 0, 'low': 0, 'normal': 0, 'high': 0, 'online': 0, 'offline': 0, 'inv_y': 0, 'foos_y': 0})
+    for r in rows:
+        code = r['cat_code']
+        prefix = code[:4] if len(code) >= 4 else 'OTHER'
+        for store, key in ((cat_type, prefix), (cat_full, code)):
+            store[key]['products'] += 1
+            store[key]['stock'] += r['stock']
+            store[key]['zero'] += 1 if r['stock'] == 0 else 0
+            store[key]['low'] += 1 if 0 < r['stock'] < 10 else 0
+            store[key]['normal'] += 1 if 10 <= r['stock'] < 50 else 0
+            store[key]['high'] += 1 if r['stock'] >= 50 else 0
+            store[key]['online'] += 1 if r['online'] == 'ONLINE' else 0
+            store[key]['offline'] += 0 if r['online'] == 'ONLINE' else 1
+            store[key]['inv_y'] += 1 if r['invisible'] == 'Y' else 0
+            store[key]['foos_y'] += 1 if r['foos'] == 'Y' else 0
+        if code:
+            cat_type[prefix]['name'] = CATEGORY_TYPE_MAPPING.get(prefix, '其他')
+            cat_full[code]['name'] = r['cat_name']
+
+    def cat_row_html(key, data, is_type):
+        inv_badge = f"<span class='badge bg-warning text-dark'>{data['inv_y']}</span>" if data['inv_y'] > 0 else f"<span class='badge bg-success'>{data['inv_y']}</span>"
+        foos_badge = f"<span class='badge bg-danger'>{data['foos_y']}</span>" if data['foos_y'] > 0 else f"<span class='badge bg-success'>{data['foos_y']}</span>"
+        online_badge = f'<span class="badge bg-success">{data["online"]}</span> / <span class="badge bg-secondary">{data["offline"]}</span>'
+        if is_type:
+            return f'''<tr data-type="{key}">
+<td><strong>{data['name']}</strong></td>
+<td class="text-muted"><code>{key}</code></td>
+<td class="text-center">{data['products']}</td>
+<td class="text-end">{data['stock']:,}</td>
+<td class="text-center"><span class="badge badge-zero">{data['zero']}</span></td>
+<td class="text-center"><span class="badge badge-low">{data['low']}</span></td>
+<td class="text-center"><span class="badge badge-normal">{data['normal']}</span></td>
+<td class="text-center"><span class="badge badge-high">{data['high']}</span></td>
+<td class="text-center">{online_badge}</td>
+<td class="text-center">{inv_badge}</td>
+<td class="text-center">{foos_badge}</td>
+</tr>'''
+        primary_online = 'online' if data['online'] >= data['offline'] else 'offline'
+        primary_inv = 'Y' if data['inv_y'] > 0 else 'N'
+        primary_foos = 'Y' if data['foos_y'] > 0 else 'N'
+        return f'''<tr data-online="{primary_online}" data-invisible="{primary_inv}" data-foos="{primary_foos}">
+<td><code>{key}</code></td>
+<td>{data['name']}</td>
+<td class="text-center">{data['products']}</td>
+<td class="text-end">{data['stock']:,}</td>
+<td class="text-center"><span class="badge badge-zero">{data['zero']}</span></td>
+<td class="text-center"><span class="badge badge-low">{data['low']}</span></td>
+<td class="text-center"><span class="badge badge-normal">{data['normal']}</span></td>
+<td class="text-center"><span class="badge badge-high">{data['high']}</span></td>
+<td class="text-center">{online_badge}</td>
+<td class="text-center">{inv_badge}</td>
+<td class="text-center">{foos_badge}</td>
+</tr>'''
+
+    type_rows = ''.join(cat_row_html(k, v, True) for k, v in sorted(cat_type.items(), key=lambda x: x[1]['products'], reverse=True))
+    full_rows = ''.join(cat_row_html(k, v, False) for k, v in sorted(cat_full.items(), key=lambda x: x[1]['products'], reverse=True) if k and k != 'nan')
+
+    # SKU Status cards rows
+    online_s_rows = ''.join(status_card_row(r) for r in sorted((x for x in rows if x['online'] == 'ONLINE'), key=lambda x: x['stock'], reverse=True))
+    invisible_y_rows = ''.join(status_card_row(r) for r in sorted((x for x in rows if x['invisible'] == 'Y'), key=lambda x: x['stock'], reverse=True))
+    foos_y_rows = ''.join(status_card_row(r) for r in sorted((x for x in rows if x['foos'] == 'Y'), key=lambda x: x['stock'], reverse=True))
+
+    # Brand options
+    brand_options = '<option value="all">All Brands</option>'
+    for b in sorted(brand_summary.keys()):
+        brand_options += f'<option value="{b.lower().replace(chr(34), "&quot;")}">{esc(b, 40)}</option>'
+
+    # Report date from CSV header
+    report_date = '2026-08-08'
+    try:
+        with open(CSV_PATH, encoding='utf-8-sig') as f:
+            for line in f:
+                if line.startswith('Date,'):
+                    report_date = line.split(',')[1].strip().replace('/', '-')
+                    break
+    except Exception:
+        pass
+    generated_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    # Price check count
+    try:
+        pcd = json.load(open(PRICE_CHECK, encoding='utf-8'))
+        price_count = len(pcd)
+    except Exception:
+        price_count = total_products
+
+    # ==================== Patch index.html ====================
+    html = open(INDEX, encoding='utf-8').read()
+    orig_len = len(html)
+
+    # 1. Header dates
+    html = re.sub(r'📅 Inventory Report: [^&]+', f'📅 Inventory Report: {report_date}', html)
+    html = re.sub(r'🔄 [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9:]{8}', f'🔄 {generated_time}', html)
+
+    # 2. KPI cards
+    html = re.sub(r'(id="kpiTotal"[^>]*>)[^<]*', r'\g<1>', html)
+    html = html.replace('style="color:var(--primary)">0</div><div class="kpi-label">📦 Total SKUs',
+                        f'style="color:var(--primary)">{total_products}</div><div class="kpi-label">📦 Total SKUs')
+    html = html.replace('style="color:var(--success)">0</div><div class="kpi-label">📊 Total Stock',
+                        f'style="color:var(--success)">{total_stock:,}</div><div class="kpi-label">📊 Total Stock')
+    html = html.replace('style="color:var(--danger)">0</div><div class="kpi-label">🚫 Zero (0)',
+                        f'style="color:var(--danger)">{zero_count}</div><div class="kpi-label">🚫 Zero (0)')
+    html = html.replace('style="color:var(--warning)">0</div><div class="kpi-label">⚠️ Low (1-9)',
+                        f'style="color:var(--warning)">{low_count}</div><div class="kpi-label">⚠️ Low (1-9)')
+    html = html.replace('style="color:var(--success)">0</div><div class="kpi-label">🟢 Normal (10-49)',
+                        f'style="color:var(--success)">{normal_count}</div><div class="kpi-label">🟢 Normal (10-49)')
+    html = html.replace('style="color:var(--primary)">0</div><div class="kpi-label">🔵 High (50+)',
+                        f'style="color:var(--primary)">{high_count}</div><div class="kpi-label">🔵 High (50+)')
+
+    # 3. Tab labels
+    html = re.sub(r'(data-bs-target="#all">📋 )[^<]*', rf'\g<1>All ({total_products})', html)
+    html = re.sub(r'(data-bs-target="#skuid">🔢 By Online SKU)[^<]*', rf'\g<1> ({online_count})', html)
+    html = re.sub(r'(data-bs-target="#brand">🏷️ )[^<]*', rf'\g<1>Brand ({len(brand_summary)})', html)
+    html = re.sub(r'(data-bs-target="#alerts">⚠️ Alerts)[^<]*', rf'\g<1> ({zero_count + low_count})', html)
+    html = re.sub(r'(data-bs-target="#newsku">🆕 New SKU)[^<]*', rf'\g<1> ({new_sku_count})', html)
+    html = re.sub(r'(data-bs-target="#pricecheck">💰 Price Check)[^<]*', rf'\g<1> ({price_count})', html)
+
+    # 4. tableAll tbody
+    def replace_tbody(html, tbody_id, content):
+        pattern = re.compile(r'(<tbody[^>]*id="' + re.escape(tbody_id) + r'"[^>]*>).*?(</tbody>)', re.S)
+        m = pattern.search(html)
+        if not m:
+            print(f'⚠️ tbody #{tbody_id} not found')
+            return html
+        return pattern.sub(lambda mm: mm.group(1) + content + mm.group(2), html)
+
+    html = replace_tbody(html, 'tableAll', all_rows)
+    html = replace_tbody(html, 'tableSku', online_rows)
+    html = replace_tbody(html, 'categoryTypeBody', type_rows)
+    html = replace_tbody(html, 'categoryFullBody', full_rows)
+    html = replace_tbody(html, 'tableNewSku', new_sku_rows)
+
+    # 5. Brand table tbody (first tbody after #brand pane, no id)
+    brand_pattern = re.compile(r'(id="brand">.*?<tbody>)(.*?)(</tbody>)', re.S)
+    m = brand_pattern.search(html)
+    if m:
+        html = brand_pattern.sub(lambda mm: mm.group(1) + brand_rows_html + mm.group(3), html, count=1)
+    else:
+        print('⚠️ brand tbody not found')
+
+    # 6. Brand filter options
+    for sel_id in ['brandAll', 'brandSku']:
+        pattern = re.compile(r'(<select id="' + sel_id + r'"[^>]*>)(.*?)(</select>)', re.S)
+        m = pattern.search(html)
+        if m:
+            html = pattern.sub(lambda mm: mm.group(1) + brand_options + mm.group(3), html, count=1)
+
+    # 7. SKU Status cards: replace headers + tbody
+    # Online card
+    html = re.sub(r'(🌐 Online Status</span>\s*<span class="text-dark">)[^<]+', rf'\g<1>{online_count} online / {offline_count} offline', html)
+    html = re.sub(r'(👁️ Invisible</span>\s*<span class="text-dark">)[^<]+', rf'\g<1>{inv_y} Y / {inv_n} N', html)
+    html = re.sub(r'(🚫 Force OOS</span>\s*<span class="text-dark">)[^<]+', rf'\g<1>{foos_y} Y / {foos_n} N', html)
+
+    # Replace the 3 status card tbodies (they have no id, order: online, invisible, force)
+    def replace_nth_tbody_in_pane(html, pane_id, content, nth):
+        pane_start = html.find(f'id="{pane_id}"')
+        pane_end = html.find('</div>\n            <div class="tab-pane', pane_start)
+        if pane_end == -1:
+            pane_end = pane_start + 20000
+        pane = html[pane_start:pane_end]
+        idx = 0
+        count = 0
+        pos = 0
+        while True:
+            tb = pane.find('<tbody>', pos)
+            if tb == -1:
+                break
+            count += 1
+            if count == nth:
+                te = pane.find('</tbody>', tb)
+                replacement = pane[:tb + len('<tbody>')] + content + pane[te:]
+                return html[:pane_start] + replacement + html[pane_end:]
+            pos = tb + 7
+        print(f'⚠️ tbody #{nth} in pane #{pane_id} not found')
+        return html
+
+    html = replace_nth_tbody_in_pane(html, 'skustatus', online_s_rows, 1)
+    html = replace_nth_tbody_in_pane(html, 'skustatus', invisible_y_rows, 2)
+    html = replace_nth_tbody_in_pane(html, 'skustatus', foos_y_rows, 3)
+
+    # 8. Alerts cards: Zero + Low
+    html = re.sub(r'(🚫 Zero Stock \()[^)]*', rf'\g<1>{zero_count}', html)
+    html = re.sub(r'(⚠️ Low Stock \()[^)]*', rf'\g<1>{low_count}', html)
+    html = replace_nth_tbody_in_pane(html, 'alerts', zero_rows, 1)
+    html = replace_nth_tbody_in_pane(html, 'alerts', low_rows, 2)
+
+    # 9. Category footer date
+    html = re.sub(r'(\* 數據日期: )[^|]+', rf'\g<1>{report_date}', html)
+
+    # 10. Subtitle (store name)
+    html = html.replace('Hong Kong online Community pharmacy superstore', 'THANN')
+
+    open(INDEX, 'w', encoding='utf-8').write(html)
+    print(f'✅ index.html updated: {orig_len} → {len(html)} bytes')
+    print(f'   KPI: {total_products} SKUs / {total_stock:,} stock | zero={zero_count} low={low_count} normal={normal_count} high={high_count}')
+    print(f'   Online: {online_count} | Invisible Y: {inv_y} | FOOS Y: {foos_y} | New: {new_sku_count}')
+    print(f'   Categories: {len(cat_type)} types / {len([k for k in cat_full if k and k != "nan"])} full')
+
+if __name__ == '__main__':
+    main()
