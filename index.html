@@ -5477,6 +5477,7 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
     function hideTrendPopup() {
         const popup = document.getElementById('trendPopup');
         if (popup) popup.style.display = 'none';
+        if (trendChart) { trendChart.destroy(); trendChart = null; }
     }
 
     function fmtDiff(d, comparePrice, psp, rsp, officialPrice) {
