@@ -80,8 +80,8 @@
                     <div>
                         <h2 class="mb-1">🌿 H8391001 Store Dashboard</h2>
                         <p class="mb-0 opacity-75">THANN</p>
-                        <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:4px">📅 Inventory Report: 2026-08-05&nbsp;|&nbsp; 🔄 2026-08-10 14:20:56</p>
-                        <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:2px">📅 Order Report: 2026-08-09 (23:59:59)|&nbsp; 🔄 2026-08-10 14:20:56</p>
+                        <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:4px">📅 Inventory Report: 2026-08-05&nbsp;|&nbsp; 🔄 2026-08-10 14:24:00</p>
+                        <p class="mb-0" style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin-top:2px">📅 Order Report: 2026-08-09 (23:59:59)|&nbsp; 🔄 2026-08-10 14:24:00</p>
                     </div>
                     <span id="countdownDisplay" style="color:rgba(255,255,255,0.9);font-size:0.85rem;font-weight:500" title="Auto-refresh when cron job completes">🔄 Cron</span>
                 </div>
@@ -5401,6 +5401,84 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
         if (v === null || v === undefined || isNaN(v)) return '<span class="text-muted">—</span>';
         return '$' + v.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
+    // PSP price history for 走向 (trend) column — hover shows popup line chart
+    let pspHistory = {};
+    let trendChart = null;
+    let trendPopupTimer = null;
+
+    function trendCell(sku) {
+        const hist = pspHistory[sku];
+        const dates = hist ? Object.keys(hist).sort() : [];
+        if (!dates.length) return '<span class="text-muted">—</span>';
+        const last = hist[dates[dates.length - 1]];
+        // Show a small sparkline-ish indicator; hover opens popup chart
+        const label = '📈 $' + last.toFixed(0);
+        return '<a href="javascript:void(0)" class="trend-link text-decoration-none" '
+            + 'data-sku="' + sku + '" '
+            + 'onmouseenter="showTrendPopup(\'' + sku + '\', this)" '
+            + 'onmouseleave="hideTrendPopup()" '
+            + 'title="PSP 每日價格 — hover 睇折線圖">'
+            + '<span class="text-primary fw-bold">' + label + '</span></a>';
+    }
+
+    function showTrendPopup(sku, el) {
+        const hist = pspHistory[sku];
+        if (!hist) return;
+        const dates = Object.keys(hist).sort();
+        if (!dates.length) return;
+        hideTrendPopup();
+        const popup = document.getElementById('trendPopup');
+        const canvas = document.getElementById('trendPopupChart');
+        const titleEl = document.getElementById('trendPopupTitle');
+        titleEl.textContent = sku.replace('H8391001_S_', '') + ' — PSP 每日價格';
+        // Build chart data
+        const labels = dates;
+        const data = dates.map(d => hist[d]);
+        if (trendChart) { trendChart.destroy(); trendChart = null; }
+        trendChart = new Chart(canvas, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'PSP ($)',
+                    data: data,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13,110,253,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#0d6efd'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) { return 'PSP: $' + ctx.parsed.y.toFixed(2); }
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: false, ticks: { callback: function(v) { return '$' + v; } } },
+                    x: { ticks: { maxRotation: 45, font: { size: 10 } } }
+                }
+            }
+        });
+        // Position popup near the cell
+        const rect = el.getBoundingClientRect();
+        popup.style.display = 'block';
+        popup.style.left = Math.min(rect.left, window.innerWidth - 340) + 'px';
+        popup.style.top = (rect.bottom + 8) + 'px';
+    }
+
+    function hideTrendPopup() {
+        const popup = document.getElementById('trendPopup');
+        if (popup) popup.style.display = 'none';
+    }
+
     function fmtDiff(d, comparePrice, psp, rsp, officialPrice) {
         // Returns {amount, emoji, text} for 差價 / 走向 / 變動 columns
         const title = '比較基準: ' + (comparePrice !== null && comparePrice !== undefined && !isNaN(comparePrice) ? '$' + comparePrice.toFixed(2) : '—') + ' vs 官網 $' + (officialPrice !== undefined && officialPrice !== null && !isNaN(officialPrice) ? officialPrice.toFixed(2) : '—');
@@ -5412,9 +5490,9 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
             return { amount: '<span class="text-muted" title="' + title + '">$0.00</span>', emoji: '<span class="text-muted" title="' + title + '">➖</span>', text: '<span class="text-muted" title="' + title + '">無變動</span>' };
         }
         if (d > 0) {
-            return { amount: '<span class="text-danger" title="' + title + '">' + sign + '$' + d.toFixed(2) + '</span>', emoji: '<span class="text-danger" title="' + title + '">😡</span>', text: '<span class="text-danger fw-bold" title="' + title + '">價格上升</span>' };
+            return { amount: '<span class="text-danger" title="' + title + '">' + sign + '$' + d.toFixed(2) + '</span>', emoji: '<span class="text-danger" title="' + title + '">😡</span>', text: '<span class="text-danger fw-bold" title="' + title + '">😡 價格上升</span>' };
         }
-        return { amount: '<span class="text-success" title="' + title + '">' + sign + '$' + d.toFixed(2) + '</span>', emoji: '<span class="text-success" title="' + title + '">😍</span>', text: '<span class="text-success fw-bold" title="' + title + '">價格下跌</span>' };
+        return { amount: '<span class="text-success" title="' + title + '">' + sign + '$' + d.toFixed(2) + '</span>', emoji: '<span class="text-success" title="' + title + '">😍</span>', text: '<span class="text-success fw-bold" title="' + title + '">😍 價格下跌</span>' };
     }
     function renderPriceCheck() {
         const tbody = document.getElementById('tablePrice');
@@ -5444,7 +5522,7 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
                 + '<td class="text-end">' + fmtPrice(r.psp) + '</td>'
                 + '<td class="text-end fw-bold">' + offCell + '</td>'
                 + '<td class="text-end">' + dc.amount + '</td>'
-                + '<td class="text-center">' + dc.emoji + '</td>'
+                + '<td class="text-center">' + trendCell(r.sku) + '</td>'
                 + '<td class="text-center">' + dc.text + '</td>'
                 + '<td class="text-muted">' + (r.status || '') + '</td>'
                 + '</tr>';
@@ -5485,8 +5563,28 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
         }
         renderPriceCheck();
     }
+
+    async function loadPspHistory() {
+        try {
+            const res = await fetch('data/psp_history.json?' + Date.now());
+            pspHistory = await res.json();
+        } catch (e) {
+            console.error('loadPspHistory failed', e);
+            pspHistory = {};
+        }
+    }
+    loadPspHistory();
     loadPriceCheck();
 
     </script>
+    <!-- Trend popup (PSP price line chart) -->
+    <div id="trendPopup" style="display:none;position:fixed;z-index:1080;width:320px;background:#fff;border:1px solid #dee2e6;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);padding:10px;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <strong id="trendPopupTitle" style="font-size:0.85rem;"></strong>
+            <button type="button" class="btn-close btn-close-sm" style="font-size:0.6rem;" onclick="hideTrendPopup()"></button>
+        </div>
+        <div style="height:160px;"><canvas id="trendPopupChart"></canvas></div>
+        <small class="text-muted">💡 hover 更多日期會顯示走勢</small>
+    </div>
 </body>
 </html>

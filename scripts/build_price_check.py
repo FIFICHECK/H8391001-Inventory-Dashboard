@@ -122,6 +122,27 @@ def main():
     with open('data/price_check_data.json', 'w', encoding='utf-8') as f:
         json.dump(output, f, ensure_ascii=False, indent=2)
 
+    # Record PSP price history for 走向 (trend) chart
+    # psp_history.json: { "H8391001_S_XXX": { "2026-08-05": 96.0, "2026-08-10": 100.0 }, ... }
+    from datetime import date
+    today = date.today().isoformat()
+    hist_path = 'data/psp_history.json'
+    try:
+        with open(hist_path, encoding='utf-8') as f:
+            history = json.load(f)
+    except Exception:
+        history = {}
+    for r in output:
+        sku = r['sku']
+        if r.get('psp') is not None and isinstance(r.get('psp'), (int, float)) and r['psp'] > 0:
+            if sku not in history:
+                history[sku] = {}
+            history[sku][today] = round(r['psp'], 2)
+    with open(hist_path, 'w', encoding='utf-8') as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+    n_hist = sum(1 for v in history.values() if today in v)
+    print(f'📈 PSP history updated: {n_hist} SKUs recorded for {today} (total {len(history)} SKUs tracked)')
+
     print(f"Total: {len(output)} | exact: {exact} | prefix: {prefix} | no-match: {none}")
     if prefix_details:
         print(f"\n--- size-mismatch rejected ({len(prefix_details)}) ---")
