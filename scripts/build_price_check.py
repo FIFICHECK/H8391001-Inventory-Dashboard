@@ -56,6 +56,10 @@ def size_compatible(name1, name2):
 
 def main():
     inv = load_inventory()
+    # Only check ONLINE SKUs (per user requirement — Price Check tab shows only
+    # SKUs that are ONLINE in the inventory report)
+    inv = [r for r in inv if str(r.get('status', '')).upper() == 'ONLINE']
+    print(f'🔍 Filtered to ONLINE SKUs only: {len(inv)} rows')
     with open('data/thann_official_prices.json', encoding='utf-8') as f:
         official = json.load(f)
 
