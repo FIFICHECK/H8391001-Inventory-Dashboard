@@ -5434,6 +5434,11 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
         // Build chart data
         const labels = dates;
         const data = dates.map(d => hist[d]);
+        // Robust cleanup: destroy any existing chart bound to this canvas
+        try {
+            const existing = Chart.getChart(canvas);
+            if (existing) existing.destroy();
+        } catch (e) { /* chart registry not available */ }
         if (trendChart) { trendChart.destroy(); trendChart = null; }
         trendChart = new Chart(canvas, {
             type: 'line',
