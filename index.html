@@ -5516,8 +5516,15 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
                 ? '<a href="' + r.official_url + '" target="_blank" class="text-decoration-none fw-bold" title="' + (r.official_name || '') + '">' + fmtPrice(r.official_price) + '</a>'
                 : '<span class="text-muted">—</span>';
             const dc = fmtDiff(r.diff, r.compare_price, r.psp, r.rsp, r.official_price);
+            // Price delta category for filter: up / down / flat / none
+            let pricedelta = 'none';
+            if (r.official_price !== null && r.official_price !== undefined && r.diff !== null && r.diff !== undefined && !isNaN(r.diff)) {
+                if (r.diff > 0) pricedelta = 'up';
+                else if (r.diff < 0) pricedelta = 'down';
+                else pricedelta = 'flat';
+            }
             const skuLink = '<a href="https://www.hktvmall.com/hktv/p/' + r.sku + '" target="_blank"><code>' + r.sku + '</code></a>';
-            return '<tr data-brand="' + (r.brand || '') + '" data-pricedelta="none">'
+            return '<tr data-brand="' + (r.brand || '') + '" data-pricedelta="' + pricedelta + '">'
                 + '<td>' + skuLink + '</td>'
                 + '<td>' + (r.brand || '—') + '</td>'
                 + '<td title="' + name + '">' + (name.length > 50 ? name.slice(0, 50) + '…' : name) + '</td>'
