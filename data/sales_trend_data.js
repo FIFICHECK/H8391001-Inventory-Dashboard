@@ -1,5 +1,5 @@
 // Auto-generated sales trend data
-// Generated: 2026-08-10 11:06:40
+// Generated: 2026-08-10 11:14:43
 // Source: order_data.json (merged from all 23:59 daily order reports)
 
 const salesTrendData = {
@@ -2242,6 +2242,24 @@ const salesTrendData = {
     "total_gmv": 115583.45,
     "total_orders": 623,
     "avg_order_value": 185.53,
-    "date_range": "2026-08-01 to 2026-08-09"
+    "date_range": "2026-08-01 to 2026-08-09",
+    "this_month": {
+      "label": "2026-08",
+      "gmv": 115583.45,
+      "orders": 623,
+      "avg": 185.53
+    },
+    "last_month": {
+      "label": null,
+      "gmv": 0,
+      "orders": 0,
+      "avg": 0
+    },
+    "month_before_last": {
+      "label": null,
+      "gmv": 0,
+      "orders": 0,
+      "avg": 0
+    }
   }
 };

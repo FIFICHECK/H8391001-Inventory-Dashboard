@@ -118,7 +118,15 @@ chart_data = {
         "total_gmv": total_gmv,
         "total_orders": total_orders,
         "avg_order_value": avg_order_value,
-        "date_range": f"{labels_date[-1]} to {labels_date[0]}"
+        "date_range": f"{labels_date[-1]} to {labels_date[0]}",
+        "this_month": {
+            "label": month_labels[-1] if month_labels else None,
+            "gmv": sum(gmv_daily.get(d, 0) for d in dates if d.startswith((month_labels[-1] + '-') if month_labels else '')),
+            "orders": sum(order_count.get(d, 0) for d in dates if d.startswith((month_labels[-1] + '-') if month_labels else '')),
+            "avg": round(sum(gmv_daily.get(d, 0) for d in dates if d.startswith((month_labels[-1] + '-') if month_labels else '')) / max(1, sum(order_count.get(d, 0) for d in dates if d.startswith((month_labels[-1] + '-') if month_labels else ''))), 2)
+        },
+        "last_month": {"label": None, "gmv": 0, "orders": 0, "avg": 0},
+        "month_before_last": {"label": None, "gmv": 0, "orders": 0, "avg": 0}
     }
 }
 
