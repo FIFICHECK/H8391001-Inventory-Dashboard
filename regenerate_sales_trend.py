@@ -42,13 +42,14 @@ order_data = [order_count.get(d, 0) for d in labels_date]
 sku_totals = {sku: sum(dates_dict.values()) for sku, dates_dict in gmv_sku_daily.items()}
 top_skus = sorted(sku_totals, key=lambda x: -sku_totals[x])[:50]
 labels_sku = labels_date
-sku_data = [[round(gmv_sku_daily.get(sku, {}).get(d, 0), 2) for d in labels_sku] for sku in top_skus]
-qty_sku_data_arr = [[round(qty_sku_daily.get(sku, {}).get(d, 0), 2) for d in labels_sku] for sku in top_skus]
+# IMPORTANT: data must be [dateIndex][skuIndex] (JS expects data[date_idx][sku_idx])
+sku_data = [[round(gmv_sku_daily.get(sku, {}).get(d, 0), 2) for sku in top_skus] for d in labels_sku]
+qty_sku_data_arr = [[round(qty_sku_daily.get(sku, {}).get(d, 0), 2) for sku in top_skus] for d in labels_sku]
 
-# GMV by Brand daily (top 20 brands)
+# GMV by Brand daily (top 20 brands) — data[dateIndex][brandIndex]
 brand_totals = {brand: sum(dates_dict.values()) for brand, dates_dict in gmv_brand_daily.items()}
 top_brands = sorted(brand_totals, key=lambda x: -brand_totals[x])[:20]
-brand_data = [[round(gmv_brand_daily.get(brand, {}).get(d, 0), 2) for d in labels_date] for brand in top_brands]
+brand_data = [[round(gmv_brand_daily.get(brand, {}).get(d, 0), 2) for brand in top_brands] for d in labels_date]
 
 # GMV by SKU monthly (aggregate daily -> monthly)
 gmv_sku_monthly = {}
@@ -71,11 +72,11 @@ for brand, dates_dict in gmv_brand_daily.items():
             gmv_brand_monthly[month] = {}
         gmv_brand_monthly[month][brand] = gmv_brand_monthly[month].get(brand, 0) + gmv_val
 
-# Monthly data arrays for charts
-month_labels = sorted(gmv_sku_monthly.keys())  # e.g. ["2026-06"]
-sku_monthly_data = [[round(gmv_sku_monthly.get(m, {}).get(sku, 0), 2) for m in month_labels] for sku in top_skus]
-qty_sku_monthly_data = [[round(qty_sku_monthly.get(m, {}).get(sku, 0), 2) for m in month_labels] for sku in top_skus]
-brand_monthly_data = [[round(gmv_brand_monthly.get(m, {}).get(brand, 0), 2) for m in month_labels] for brand in top_brands]
+# Monthly data arrays (data[monthIndex][skuIndex])
+month_labels = sorted(set(gmv_sku_monthly.keys()))
+sku_monthly_data = [[round(gmv_sku_monthly.get(m, {}).get(sku, 0), 2) for sku in top_skus] for m in month_labels]
+qty_sku_monthly_data = [[round(qty_sku_monthly.get(m, {}).get(sku, 0), 2) for sku in top_skus] for m in month_labels]
+brand_monthly_data = [[round(gmv_brand_monthly.get(m, {}).get(brand, 0), 2) for brand in top_brands] for m in month_labels]
 
 # Summary
 total_gmv = round(sum(gmv_daily.values()), 2)
