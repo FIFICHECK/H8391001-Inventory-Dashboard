@@ -216,17 +216,36 @@ def main():
     for b in sorted(brand_summary.keys()):
         brand_options += f'<option value="{b.lower().replace(chr(34), "&quot;")}">{esc(b, 40)}</option>'
 
-    # Report date from CSV header
-    report_date = '2026-08-08'
+    # Report date: read from the raw report CSV (kept in reports/) which has the
+    # "Date,YYYY/MM/DD" header line — inventory_all.csv is cleaned (header stripped).
+    report_date = ''
+    for candidate in ['reports/inventory_report_20260809_033735.csv', CSV_PATH]:
+        try:
+            with open(candidate, encoding='utf-8-sig') as f:
+                for line in f:
+                    if line.startswith('Date,'):
+                        report_date = line.split(',')[1].strip().replace('/', '-')
+                        break
+        except Exception:
+            continue
+        if report_date:
+            break
+    if not report_date:
+        report_date = datetime.now().strftime('%Y-%m-%d')
+    print(f'📅 Report date from CSV: {report_date}')
+    generated_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    # Order report date: use the newest order report file if present, else N/A
+    order_report_date_str = 'N/A'
     try:
-        with open(CSV_PATH, encoding='utf-8-sig') as f:
-            for line in f:
-                if line.startswith('Date,'):
-                    report_date = line.split(',')[1].strip().replace('/', '-')
-                    break
+        order_files = [f for f in os.listdir('reports/order_reports') if f.lower().endswith('.xlsx')]
+        if order_files:
+            newest = max(order_files, key=lambda f: os.path.getmtime(os.path.join('reports/order_reports', f)))
+            mtime = datetime.fromtimestamp(os.path.getmtime(os.path.join('reports/order_reports', newest)))
+            order_report_date_str = mtime.strftime('%Y-%m-%d (%H:%M:%S)')
     except Exception:
         pass
-    generated_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    print(f'📦 Order report date: {order_report_date_str}')
 
     # Price check count
     try:
@@ -241,6 +260,7 @@ def main():
 
     # 1. Header dates
     html = re.sub(r'📅 Inventory Report: [^&]+', f'📅 Inventory Report: {report_date}', html)
+    html = re.sub(r'📅 Order Report: [^|]+', f'📅 Order Report: {order_report_date_str}', html)
     html = re.sub(r'🔄 [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9:]{8}', f'🔄 {generated_time}', html)
 
     # 2. KPI cards
