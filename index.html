@@ -1765,23 +1765,17 @@
         
         // Only reset to current year-month-day on INITIAL page load
         if (isInitialLoad) {
-            const now = new Date();
-            const currentYear = now.getFullYear().toString();
-            const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
-            const currentDate = (now.getDate()).toString().padStart(2, '0');
-            const currentYearMonth = currentYear + '-' + currentMonth;
-            const currentFullDate = currentYear + '-' + currentMonth + '-' + currentDate;
-            
-            currentYearFilter = currentYear;
-            currentMonthFilter = currentYearMonth;
-            currentDateFilter = currentFullDate;
+            // Show ALL data by default (no forced date/month/year filter)
+            currentYearFilter = '';
+            currentMonthFilter = '';
+            currentDateFilter = '';
             
             const yearSelect = document.getElementById('salesYearFilter');
             const monthSelect = document.getElementById('salesMonthFilter');
             const dateSelect = document.getElementById('salesDateFilter');
-            if (yearSelect) yearSelect.value = currentYear;
-            if (monthSelect) monthSelect.value = currentMonthFilter;
-            if (dateSelect) dateSelect.value = currentDateFilter;
+            if (yearSelect) yearSelect.value = '';
+            if (monthSelect) monthSelect.value = '';
+            if (dateSelect) dateSelect.value = '';
             
             // Re-populate dropdown options based on selected year/month
             populateFilteredOptions();
@@ -1872,7 +1866,7 @@
                 document.getElementById('salesTrendChart').style.display = '';
                 document.getElementById('salesTableContainer').style.display = '';
                 
-                // Calculate totals and find TOP 10
+                // Calculate totals for ALL SKUs/brands (show everything, no top-N lock)
                 const isSkuChart = chartName.includes('Sku');
                 const isQty = chartName.toLowerCase().includes('qty');
                 const items = isSkuChart ? data.skus : data.brands;
@@ -1882,10 +1876,11 @@
                     return { item, sum };
                 });
                 totals.sort((a, b) => b.sum - a.sum);
-                const top10 = totals.slice(0, 10);
+                // Keep ALL items with data (no top-10 limit)
+                const allItems = totals.filter(t => t.sum > 0);
                 
                 // Prepare chart labels and values
-                const chartLabels = top10.map(t => {
+                const chartLabels = allItems.map(t => {
                     if (isSkuChart) {
                         // Use product name from order report (sku_product_name_map), fallback to inventory name
                         const name = (salesTrendData.sku_product_name_map && salesTrendData.sku_product_name_map[t.item])
@@ -1895,19 +1890,22 @@
                     }
                     return t.item;
                 });
-                const chartValues = top10.map(t => t.sum);
+                const chartValues = allItems.map(t => t.sum);
                 const isGmv = !isQty;
                 
-                // Create bar chart for TOP 10
+                // Create bar chart for ALL SKUs/brands (dynamic colors)
+                const colorPalette = ['#1e40af', '#dc2626', '#16a34a', '#d97706', '#7c3aed',
+                    '#db2777', '#0891b2', '#65a30d', '#f59e0b', '#6366f1',
+                    '#0f766e', '#be185d', '#4d7c0f', '#b45309', '#7e22ce',
+                    '#0284c7', '#c2410c', '#15803d', '#9f1239', '#1d4ed8',
+                    '#a16207', '#6d28d9', '#0e7490', '#b91c1c', '#166534'];
+                const barColors = allItems.map((_, i) => colorPalette[i % colorPalette.length]);
                 const chartData = {
                     labels: chartLabels,
                     datasets: [{
                         label: isGmv ? 'GMV (HKD)' : 'Qty 件',
                         data: chartValues,
-                        backgroundColor: [
-                            '#1e40af', '#dc2626', '#16a34a', '#d97706', '#7c3aed',
-                            '#db2777', '#0891b2', '#65a30d', '#f59e0b', '#6366f1'
-                        ]
+                        backgroundColor: barColors
                     }]
                 };
                 const chartOptions = {
