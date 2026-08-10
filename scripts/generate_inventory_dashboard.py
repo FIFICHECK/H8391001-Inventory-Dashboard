@@ -358,6 +358,25 @@ def main():
     # 9. Category footer date
     html = re.sub(r'(\* 數據日期: )[^|]+', rf'\g<1>{report_date}', html)
 
+    # 9b. Report tab row: show DATA date (from CSV) not download time.
+    # Pattern: first inventory report row in the Report tab — replace the date cell
+    # (a <strong>YYYY-MM-DD</strong>) inside the Daily Inventory Report table.
+    # Find the report pane, take the first <strong>date</strong> after the inventory table header.
+    report_pane = html.find('id="report"')
+    if report_pane > -1:
+        pane = html[report_pane:]
+        # Only the first table (Daily Inventory Report 下載) — locate its <strong> cell
+        inv_table_end = pane.find('Daily Order Report')
+        if inv_table_end == -1:
+            inv_table_end = min(len(pane), 6000)
+        inv_seg = pane[:inv_table_end]
+        strong_m = re.search(r'<strong>(\d{4}-\d{2}-\d{2})</strong>', inv_seg)
+        if strong_m:
+            html = html[:report_pane] + inv_seg[:strong_m.start()] + f'<strong>{report_date}</strong>' + inv_seg[strong_m.end():] + pane[inv_table_end:]
+            print(f'📋 Report tab date updated to {report_date}')
+        else:
+            print('⚠️ Report tab date cell not found (no inventory report row?)')
+
     # 10. Subtitle (store name)
     html = html.replace('Hong Kong online Community pharmacy superstore', 'THANN')
 
