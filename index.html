@@ -2465,11 +2465,11 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
         const hist = pspHistory[sku];
         const dates = hist ? Object.keys(hist).sort() : [];
         if (!dates.length) return '<span class="text-muted">—</span>';
-        // Button: click opens popup chart with PSP daily price
+        // Button: click opens popup chart with daily price history (PSP preferred, RSP fallback)
         return '<button type="button" class="btn btn-sm btn-outline-primary trend-btn" '
             + 'data-sku="' + sku + '" '
             + 'onclick="showTrendPopup(\'' + sku + '\', this)" '
-            + 'title="PSP 每日價格 — 撳掣睇折線圖">'
+            + 'title="每日價格動向 — 撳掣睇折線圖 (PSP 冇數用 RSP)">'
             + '<span class="fw-bold">價格動向</span></button>';
     }
 
@@ -2482,7 +2482,7 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
         const popup = document.getElementById('trendPopup');
         const canvas = document.getElementById('trendPopupChart');
         const titleEl = document.getElementById('trendPopupTitle');
-        titleEl.textContent = sku.replace('H8391001_S_', '') + ' — PSP 每日價格';
+        titleEl.textContent = sku.replace('H8391001_S_', '') + ' — 每日價格動向 (PSP 冇數用 RSP)';
         // Build chart data
         const labels = dates;
         const data = dates.map(d => hist[d]);
@@ -2497,7 +2497,7 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'PSP ($)',
+                    label: '價格 ($)',
                     data: data,
                     borderColor: '#0d6efd',
                     backgroundColor: 'rgba(13,110,253,0.1)',
