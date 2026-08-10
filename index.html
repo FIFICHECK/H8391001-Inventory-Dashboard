@@ -964,6 +964,10 @@
                     <div class="card-header py-3 d-flex gap-2 flex-wrap align-items-center">
                         <span class="fw-bold">💰 Price Check</span>
                         <small id="priceCheckSub" class="text-muted ms-2">全部 SKUs（跟庫存報表）</small>
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-2">😡 價格上升 <span id="pcUpCount">0</span></span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">😍 價格下跌 <span id="pcDownCount">0</span></span>
+                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">➖ 無變動 <span id="pcFlatCount">0</span></span>
+                        <span class="badge bg-light-subtle text-muted border">— 暫無數據 <span id="pcNoDataCount">0</span></span>
                         <input type="text" id="searchPrice" placeholder="🔍 Search SKU / Brand..." class="form-control form-control-sm" style="width:200px" onkeyup="filterPriceTable()">
                         <select id="filterPriceBrand" class="form-select form-select-sm" style="width:160px" onchange="filterPriceTable()"><option value="all">全部品牌</option></select>
                         <select id="filterPrice" class="form-select form-select-sm" style="width:160px" onchange="filterPriceTable()">
@@ -4560,9 +4564,10 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
         const usedRsp = !usedPsp && rsp !== null && rsp !== undefined && !isNaN(rsp) && rsp !== '';
         const basis = usedPsp ? 'PSP' : (usedRsp ? 'RSP' : '');
         const title = '比較基準: ' + (basis ? basis + ' $' + comparePrice.toFixed(2) : '—') + ' vs 官網 $' + (officialPrice !== undefined ? officialPrice.toFixed(2) : '—');
+        const sign = d > 0 ? '+' : '';
         if (d === 0) return '<span class="text-muted" title="' + title + '">➖ 無變動</span>';
-        if (d > 0) return '<span class="text-danger fw-bold" title="' + title + '">😡 價格上升</span>';
-        return '<span class="text-success fw-bold" title="' + title + '">😍 價格下跌</span>';
+        if (d > 0) return '<span class="text-danger fw-bold" title="' + title + '">😡 價格上升 <span class="text-muted fw-normal">' + sign + '$' + d.toFixed(2) + '</span></span>';
+        return '<span class="text-success fw-bold" title="' + title + '">😍 價格下跌 <span class="text-muted fw-normal">' + sign + '$' + d.toFixed(2) + '</span></span>';
     }
     function renderPriceCheck() {
         const tbody = document.getElementById('tablePrice');
@@ -4603,6 +4608,25 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
         // Update subtitle: how many have official THANN price
         const sub = document.getElementById('priceCheckSub');
         if (sub) sub.textContent = '全部 ' + priceCheckData.length + ' SKUs（跟庫存報表）· ' + matched + ' 個有 THANN 官網對比';
+        // Update price change summary counts (emoji legend)
+        let nUp = 0, nDown = 0, nFlat = 0, nNoData = 0;
+        priceCheckData.forEach(r => {
+            const d = r.diff;
+            if (r.official_price === null || r.official_price === undefined || d === null || d === undefined || isNaN(d)) {
+                nNoData++;
+            } else if (d === 0) {
+                nFlat++;
+            } else if (d > 0) {
+                nUp++;
+            } else {
+                nDown++;
+            }
+        });
+        const setCount = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
+        setCount('pcUpCount', nUp);
+        setCount('pcDownCount', nDown);
+        setCount('pcFlatCount', nFlat);
+        setCount('pcNoDataCount', nNoData);
     }
     async function loadPriceCheck() {
         try {
