@@ -1992,6 +1992,8 @@
         }
 
         filterHtml += '<div class="col-auto"><span id="tableFilterCount" class="text-muted small"></span></div>';
+        // Download Excel button (exports current filtered view)
+        filterHtml += '<div class="col-auto"><button type="button" class="btn btn-sm btn-success" onclick="downloadSalesExcel()"><i class="bi bi-file-earmark-excel me-1"></i>📥 下載 Excel</button></div>';
         filterHtml += '</div>';
 
         let html = filterHtml + '<div class="table-responsive mt-1"><table class="table table-sm table-hover" id="salesTableEl"><thead><tr>';
@@ -2115,6 +2117,78 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
 
         // Initial filter count
         filterSalesTable();
+    }
+
+    // Download current filtered sales data as Excel (.xls SpreadsheetML, Excel-compatible)
+    function downloadSalesExcel() {
+        const table = document.getElementById('salesTableEl');
+        if (!table) { alert('冇數據可以下載'); return; }
+        const chartName = currentSalesChart || 'sales';
+        const headerRow = table.querySelector('thead tr');
+        const bodyRows = table.querySelectorAll('tbody tr');
+        const footRow = table.querySelector('tfoot tr');
+        
+        // Build rows: header + body + total
+        const rows = [];
+        if (headerRow) {
+            const cells = headerRow.querySelectorAll('th');
+            rows.push(Array.from(cells).map(c => c.textContent.trim()));
+        }
+        bodyRows.forEach(r => {
+            const cells = r.querySelectorAll('td');
+            rows.push(Array.from(cells).map(c => c.textContent.trim()));
+        });
+        if (footRow) {
+            const cells = footRow.querySelectorAll('td,th');
+            rows.push(Array.from(cells).map(c => c.textContent.trim()));
+        }
+        if (rows.length < 2) { alert('冇數據可以下載'); return; }
+        
+        // Chart display name + current filter description
+        const names = {
+            gmvByDate: 'GMV by Date', gmvByMonth: 'GMV by Monthly', gmvByHour: 'GMV by Hour',
+            gmvByDayOfWeek: 'GMV by Day of Week', gmvBySkuDaily: 'GMV by SKU (Daily)',
+            gmvBySkuMonthly: 'GMV by SKU (Monthly)', qtyBySkuDaily: 'Qty by SKU (Daily)',
+            qtyBySkuMonthly: 'Qty by SKU (Monthly)', gmvByBrandDaily: 'GMV by Brand (Daily)',
+            gmvByBrandMonthly: 'GMV by Brand (Monthly)'
+        };
+        const chartLabel = names[chartName] || chartName;
+        const filterParts = [];
+        if (currentMonthFilter) filterParts.push(currentMonthFilter);
+        if (currentDateFilter) filterParts.push(currentDateFilter);
+        if (currentYearFilter) filterParts.push(currentYearFilter + '年');
+        const filterDesc = filterParts.length ? '_' + filterParts.join('_') : '_全部';
+        const fname = chartName + filterDesc + '.xls';
+        
+        // Build SpreadsheetML XML
+        const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        let xml = '<?xml version="1.0"?>\n<?mso-application progid="Excel.Sheet"?>\n';
+        xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
+        xml += '<Styles><Style ss:ID="hdr"><Font ss:Bold="1"/><Interior ss:Color="#4472C4" ss:Pattern="Solid"/></Style><Style ss:ID="tot"><Font ss:Bold="1"/></Style></Styles>\n';
+        xml += '<Worksheet ss:Name="' + esc(chartLabel) + '"><Table>\n';
+        rows.forEach((row, ri) => {
+            xml += '<Row>';
+            row.forEach((cell, ci) => {
+                const style = ri === 0 ? ' ss:StyleID="hdr"' : (ri === rows.length - 1 ? ' ss:StyleID="tot"' : '');
+                // Numbers (strip $ , 件) get numeric cells so Excel can sum them
+                const cleaned = cell.replace(/[$,]/g, '').replace(' 件', '');
+                if (cleaned !== '' && !isNaN(parseFloat(cleaned)) && /^-?\d+(\.\d+)?$/.test(cleaned.trim())) {
+                    xml += '<Cell' + style + '><Data ss:Type="Number">' + parseFloat(cleaned) + '</Data></Cell>';
+                } else {
+                    xml += '<Cell' + style + '><Data ss:Type="String">' + esc(cell) + '</Data></Cell>';
+                }
+            });
+            xml += '</Row>\n';
+        });
+        xml += '</Table></Worksheet></Workbook>';
+        
+        const blob = new Blob(['\ufeff' + xml], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fname;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
     }
 
     // Filter table rows based on brand and keyword inputs (same pattern as Online SKU table)
