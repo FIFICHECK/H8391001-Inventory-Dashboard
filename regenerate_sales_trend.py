@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Regenerate sales_trend_data.js from order_data.json - COMPLETE version"""
 import json
+import os
 from datetime import datetime
 
 with open('data/order_data.json', 'r', encoding='utf-8') as f:
@@ -152,3 +153,21 @@ with open('data/sales_trend_data.js', 'w', encoding='utf-8') as f:
 
 print(f"\nGenerated: data/sales_trend_data.js ({len(js_content)} bytes)")
 print(f"Keys in chart_data: {list(chart_data.keys())}")
+
+# --- Auto-align to user's by_sku CSV (authoritative monthly figures) ---
+# This keeps monthly sums matching the user's CSV (Jan $433,623 etc.) after every
+# cron regenerate. Skips silently if the CSV is not present.
+print("\n=== Aligning to by_sku CSV (if available) ===")
+try:
+    import subprocess
+    import sys as _sys
+    result = subprocess.run(
+        [_sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scripts', 'align_sales_trend_to_csv.py')],
+        cwd=os.path.dirname(os.path.abspath(__file__)),
+        capture_output=True, text=True, timeout=120
+    )
+    print(result.stdout)
+    if result.returncode != 0:
+        print(f"⚠️ align script stderr: {result.stderr[:500]}")
+except Exception as e:
+    print(f"⚠️ align skipped: {e}")
