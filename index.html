@@ -5410,14 +5410,12 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
         const hist = pspHistory[sku];
         const dates = hist ? Object.keys(hist).sort() : [];
         if (!dates.length) return '<span class="text-muted">—</span>';
-        const last = hist[dates[dates.length - 1]];
         // Button: click opens popup chart with PSP daily price
-        const label = '📈 $' + last.toFixed(0);
         return '<button type="button" class="btn btn-sm btn-outline-primary trend-btn" '
             + 'data-sku="' + sku + '" '
             + 'onclick="showTrendPopup(\'' + sku + '\', this)" '
             + 'title="PSP 每日價格 — 撳掣睇折線圖">'
-            + '<span class="fw-bold">' + label + ' 價格動向</span></button>';
+            + '<span class="fw-bold">價格動向</span></button>';
     }
 
     function showTrendPopup(sku, el) {
