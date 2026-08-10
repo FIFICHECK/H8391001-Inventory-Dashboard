@@ -4558,16 +4558,19 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
         return '$' + v.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
     function fmtDiff(d, comparePrice, psp, rsp, officialPrice) {
-        if (d === null || d === undefined || isNaN(d)) return '<span class="text-muted">— 暫無數據</span>';
-        // Determine which price was used for comparison (PSP preferred, RSP fallback)
-        const usedPsp = psp !== null && psp !== undefined && !isNaN(psp) && psp !== '';
-        const usedRsp = !usedPsp && rsp !== null && rsp !== undefined && !isNaN(rsp) && rsp !== '';
-        const basis = usedPsp ? 'PSP' : (usedRsp ? 'RSP' : '');
-        const title = '比較基準: ' + (basis ? basis + ' $' + comparePrice.toFixed(2) : '—') + ' vs 官網 $' + (officialPrice !== undefined ? officialPrice.toFixed(2) : '—');
+        // Returns {amount, emoji, text} for 差價 / 走向 / 變動 columns
+        const title = '比較基準: ' + (comparePrice !== null && comparePrice !== undefined && !isNaN(comparePrice) ? '$' + comparePrice.toFixed(2) : '—') + ' vs 官網 $' + (officialPrice !== undefined && officialPrice !== null && !isNaN(officialPrice) ? officialPrice.toFixed(2) : '—');
+        if (d === null || d === undefined || isNaN(d)) {
+            return { amount: '<span class="text-muted">—</span>', emoji: '<span class="text-muted">—</span>', text: '<span class="text-muted">暫無數據</span>' };
+        }
         const sign = d > 0 ? '+' : '';
-        if (d === 0) return '<span class="text-muted" title="' + title + '">➖ 無變動</span>';
-        if (d > 0) return '<span class="text-danger fw-bold" title="' + title + '">😡 價格上升 <span class="text-muted fw-normal">' + sign + '$' + d.toFixed(2) + '</span></span>';
-        return '<span class="text-success fw-bold" title="' + title + '">😍 價格下跌 <span class="text-muted fw-normal">' + sign + '$' + d.toFixed(2) + '</span></span>';
+        if (d === 0) {
+            return { amount: '<span class="text-muted" title="' + title + '">$0.00</span>', emoji: '<span class="text-muted" title="' + title + '">➖</span>', text: '<span class="text-muted" title="' + title + '">無變動</span>' };
+        }
+        if (d > 0) {
+            return { amount: '<span class="text-danger" title="' + title + '">' + sign + '$' + d.toFixed(2) + '</span>', emoji: '<span class="text-danger" title="' + title + '">😡</span>', text: '<span class="text-danger fw-bold" title="' + title + '">價格上升</span>' };
+        }
+        return { amount: '<span class="text-success" title="' + title + '">' + sign + '$' + d.toFixed(2) + '</span>', emoji: '<span class="text-success" title="' + title + '">😍</span>', text: '<span class="text-success fw-bold" title="' + title + '">價格下跌</span>' };
     }
     function renderPriceCheck() {
         const tbody = document.getElementById('tablePrice');
@@ -4587,7 +4590,7 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
             const offCell = off
                 ? '<a href="' + r.official_url + '" target="_blank" class="text-decoration-none fw-bold" title="' + (r.official_name || '') + '">' + fmtPrice(r.official_price) + '</a>'
                 : '<span class="text-muted">—</span>';
-            const diffCell = off ? fmtDiff(r.diff, r.compare_price, r.psp, r.rsp, r.official_price) : '<span class="text-muted">— 暫無數據</span>';
+            const dc = fmtDiff(r.diff, r.compare_price, r.psp, r.rsp, r.official_price);
             const skuLink = '<a href="https://www.hktvmall.com/hktv/p/' + r.sku + '" target="_blank"><code>' + r.sku + '</code></a>';
             return '<tr data-brand="' + (r.brand || '') + '" data-pricedelta="none">'
                 + '<td>' + skuLink + '</td>'
@@ -4596,9 +4599,9 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
                 + '<td class="text-end">' + fmtPrice(r.rsp) + '</td>'
                 + '<td class="text-end">' + fmtPrice(r.psp) + '</td>'
                 + '<td class="text-end fw-bold">' + offCell + '</td>'
-                + '<td class="text-end">' + diffCell + '</td>'
-                + '<td class="text-center text-muted">—</td>'
-                + '<td class="text-center text-muted">—</td>'
+                + '<td class="text-end">' + dc.amount + '</td>'
+                + '<td class="text-center">' + dc.emoji + '</td>'
+                + '<td class="text-center">' + dc.text + '</td>'
                 + '<td class="text-muted">' + (r.status || '') + '</td>'
                 + '</tr>';
         }).join('');
