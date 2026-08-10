@@ -13,7 +13,8 @@
     "official_price": 67.0,
     "official_url": "https://thann.com.hk/aw0117.html",
     "match_type": "exact",
-    "diff": -16.0
+    "diff": -16.0,
+    "compare_price": 51.0
   },
   {
     "sku": "H8391001_S_AW0230",
@@ -29,7 +30,8 @@
     "official_price": 127.0,
     "official_url": "https://thann.com.hk/aw0230.html",
     "match_type": "exact",
-    "diff": -31.0
+    "diff": -31.0,
+    "compare_price": 96.0
   },
   {
     "sku": "H8391001_S_AW0230FREEGIFT",
@@ -45,7 +47,8 @@
     "official_price": 127.0,
     "official_url": "https://thann.com.hk/aw0230.html",
     "match_type": "prefix",
-    "diff": null
+    "diff": 22.0,
+    "compare_price": 149.0
   },
   {
     "sku": "H8391001_S_AW0238",
@@ -61,7 +64,8 @@
     "official_price": 203.0,
     "official_url": "https://thann.com.hk/aw0238.html",
     "match_type": "exact",
-    "diff": 35.0
+    "diff": 35.0,
+    "compare_price": 238.0
   },
   {
     "sku": "H8391001_S_AW0268",
@@ -93,7 +97,8 @@
     "official_price": 169.0,
     "official_url": "https://thann.com.hk/aw0319.html",
     "match_type": "exact",
-    "diff": -40.0
+    "diff": -40.0,
+    "compare_price": 129.0
   },
   {
     "sku": "H8391001_S_AW0320",
@@ -125,7 +130,8 @@
     "official_price": 161.0,
     "official_url": "https://thann.com.hk/aw0321.html",
     "match_type": "exact",
-    "diff": -39.0
+    "diff": -39.0,
+    "compare_price": 122.0
   },
   {
     "sku": "H8391001_S_AW0410",
@@ -189,7 +195,8 @@
     "official_price": 144.0,
     "official_url": "https://thann.com.hk/aw0528.html",
     "match_type": "exact",
-    "diff": -35.0
+    "diff": -35.0,
+    "compare_price": 109.0
   },
   {
     "sku": "H8391001_S_AW0528FREEGIFT",
@@ -205,7 +212,8 @@
     "official_price": 144.0,
     "official_url": "https://thann.com.hk/aw0528.html",
     "match_type": "prefix",
-    "diff": null
+    "diff": 25.0,
+    "compare_price": 169.0
   },
   {
     "sku": "H8391001_S_AW0632",
@@ -221,7 +229,8 @@
     "official_price": 144.0,
     "official_url": "https://thann.com.hk/aw0632.html",
     "match_type": "exact",
-    "diff": -35.0
+    "diff": -35.0,
+    "compare_price": 109.0
   },
   {
     "sku": "H8391001_S_AW0804",
@@ -237,7 +246,8 @@
     "official_price": 271.0,
     "official_url": "https://thann.com.hk/aw0804.html",
     "match_type": "exact",
-    "diff": -64.0
+    "diff": -64.0,
+    "compare_price": 207.0
   },
   {
     "sku": "H8391001_S_AW0811",
@@ -253,7 +263,8 @@
     "official_price": 560.0,
     "official_url": "https://thann.com.hk/aw0811.html",
     "match_type": "exact",
-    "diff": -132.0
+    "diff": -132.0,
+    "compare_price": 428.0
   },
   {
     "sku": "H8391001_S_AW0814",
@@ -269,7 +280,8 @@
     "official_price": 450.0,
     "official_url": "https://thann.com.hk/aw0814.html",
     "match_type": "exact",
-    "diff": -107.0
+    "diff": -107.0,
+    "compare_price": 343.0
   },
   {
     "sku": "H8391001_S_AW0824",
@@ -301,7 +313,8 @@
     "official_price": 424.0,
     "official_url": "https://thann.com.hk/aw0912.html",
     "match_type": "exact",
-    "diff": -100.0
+    "diff": -100.0,
+    "compare_price": 324.0
   },
   {
     "sku": "H8391001_S_EB0201",
@@ -317,7 +330,8 @@
     "official_price": 203.0,
     "official_url": "https://thann.com.hk/eb0201.html",
     "match_type": "exact",
-    "diff": 35.0
+    "diff": 35.0,
+    "compare_price": 238.0
   },
   {
     "sku": "H8391001_S_EB0201FREEGIFT",
@@ -333,7 +347,8 @@
     "official_price": 203.0,
     "official_url": "https://thann.com.hk/eb0201.html",
     "match_type": "prefix",
-    "diff": null
+    "diff": 37.0,
+    "compare_price": 240.0
   },
   {
     "sku": "H8391001_S_EB0308",
@@ -349,7 +364,8 @@
     "official_price": 161.0,
     "official_url": "https://thann.com.hk/eb0308.html",
     "match_type": "exact",
-    "diff": -39.0
+    "diff": -39.0,
+    "compare_price": 122.0
   },
   {
     "sku": "H8391001_S_EB0309FREEGIFT",
@@ -381,7 +397,8 @@
     "official_price": 305.0,
     "official_url": "https://thann.com.hk/eb0402.html",
     "match_type": "exact",
-    "diff": -72.0
+    "diff": -72.0,
+    "compare_price": 233.0
   },
   {
     "sku": "H8391001_S_EB0402FREEGIFT",
@@ -397,7 +414,8 @@
     "official_price": 305.0,
     "official_url": "https://thann.com.hk/eb0402.html",
     "match_type": "prefix",
-    "diff": null
+    "diff": null,
+    "compare_price": null
   },
   {
     "sku": "H8391001_S_EB0504",
@@ -413,7 +431,8 @@
     "official_price": 144.0,
     "official_url": "https://thann.com.hk/eb0504.html",
     "match_type": "exact",
-    "diff": -35.0
+    "diff": -35.0,
+    "compare_price": 109.0
   },
   {
     "sku": "H8391001_S_EB0604",
@@ -429,7 +448,8 @@
     "official_price": 144.0,
     "official_url": "https://thann.com.hk/eb0604.html",
     "match_type": "exact",
-    "diff": -35.0
+    "diff": -35.0,
+    "compare_price": 109.0
   },
   {
     "sku": "H8391001_S_EB0801",
@@ -445,7 +465,8 @@
     "official_price": 560.0,
     "official_url": "https://thann.com.hk/eb0801.html",
     "match_type": "exact",
-    "diff": -132.0
+    "diff": -132.0,
+    "compare_price": 428.0
   },
   {
     "sku": "H8391001_S_EB0803",
@@ -461,7 +482,8 @@
     "official_price": 271.0,
     "official_url": "https://thann.com.hk/eb0803.html",
     "match_type": "exact",
-    "diff": -64.0
+    "diff": -64.0,
+    "compare_price": 207.0
   },
   {
     "sku": "H8391001_S_EB0804",
@@ -477,7 +499,8 @@
     "official_price": 450.0,
     "official_url": "https://thann.com.hk/eb0804.html",
     "match_type": "exact",
-    "diff": -107.0
+    "diff": -107.0,
+    "compare_price": 343.0
   },
   {
     "sku": "H8391001_S_EB0903",
@@ -493,7 +516,8 @@
     "official_price": 424.0,
     "official_url": "https://thann.com.hk/eb0903.html",
     "match_type": "exact",
-    "diff": -100.0
+    "diff": -100.0,
+    "compare_price": 324.0
   },
   {
     "sku": "H8391001_S_EB1403",
@@ -509,7 +533,8 @@
     "official_price": 254.0,
     "official_url": "https://thann.com.hk/eb1403.html",
     "match_type": "exact",
-    "diff": -60.0
+    "diff": -60.0,
+    "compare_price": 194.0
   },
   {
     "sku": "H8391001_S_EG0201",
@@ -525,7 +550,8 @@
     "official_price": 203.0,
     "official_url": "https://thann.com.hk/eg0201.html",
     "match_type": "exact",
-    "diff": 35.0
+    "diff": 35.0,
+    "compare_price": 238.0
   },
   {
     "sku": "H8391001_S_EG0301",
@@ -541,7 +567,8 @@
     "official_price": 161.0,
     "official_url": "https://thann.com.hk/eg0301.html",
     "match_type": "exact",
-    "diff": -39.0
+    "diff": -39.0,
+    "compare_price": 122.0
   },
   {
     "sku": "H8391001_S_EG0301FREEGIFT",
@@ -557,7 +584,8 @@
     "official_price": 161.0,
     "official_url": "https://thann.com.hk/eg0301.html",
     "match_type": "prefix",
-    "diff": null
+    "diff": null,
+    "compare_price": null
   },
   {
     "sku": "H8391001_S_EG0302",
@@ -573,7 +601,8 @@
     "official_price": 229.0,
     "official_url": "https://thann.com.hk/eg0302.html",
     "match_type": "exact",
-    "diff": -55.0
+    "diff": -55.0,
+    "compare_price": 174.0
   },
   {
     "sku": "H8391001_S_EG0401",
@@ -589,7 +618,8 @@
     "official_price": 305.0,
     "official_url": "https://thann.com.hk/eg0401.html",
     "match_type": "exact",
-    "diff": -72.0
+    "diff": -72.0,
+    "compare_price": 233.0
   },
   {
     "sku": "H8391001_S_EG0902",
@@ -605,7 +635,8 @@
     "official_price": 424.0,
     "official_url": "https://thann.com.hk/eg0902.html",
     "match_type": "exact",
-    "diff": -100.0
+    "diff": -100.0,
+    "compare_price": 324.0
   },
   {
     "sku": "H8391001_S_EG1401",
@@ -621,7 +652,8 @@
     "official_price": 254.0,
     "official_url": "https://thann.com.hk/eg1401.html",
     "match_type": "exact",
-    "diff": -60.0
+    "diff": -60.0,
+    "compare_price": 194.0
   },
   {
     "sku": "H8391001_S_EO0401FREEGIFT",
@@ -669,7 +701,8 @@
     "official_price": 203.0,
     "official_url": "https://thann.com.hk/gb0008s.html",
     "match_type": "exact",
-    "diff": -48.0
+    "diff": -48.0,
+    "compare_price": 155.0
   },
   {
     "sku": "H8391001_S_GS0056",
@@ -685,7 +718,8 @@
     "official_price": 237.0,
     "official_url": "https://thann.com.hk/gs0056.html",
     "match_type": "exact",
-    "diff": -56.0
+    "diff": -56.0,
+    "compare_price": 181.0
   },
   {
     "sku": "H8391001_S_LC0829",
@@ -701,7 +735,8 @@
     "official_price": 450.0,
     "official_url": "https://thann.com.hk/lc0829.html",
     "match_type": "exact",
-    "diff": -107.0
+    "diff": -107.0,
+    "compare_price": 343.0
   },
   {
     "sku": "H8391001_S_LC0830",
@@ -733,7 +768,8 @@
     "official_price": 271.0,
     "official_url": "https://thann.com.hk/lc0831.html",
     "match_type": "exact",
-    "diff": -64.0
+    "diff": -64.0,
+    "compare_price": 207.0
   },
   {
     "sku": "H8391001_S_LC0842",
@@ -765,7 +801,8 @@
     "official_price": 135.0,
     "official_url": "https://thann.com.hk/lc1102.html",
     "match_type": "exact",
-    "diff": -32.0
+    "diff": -32.0,
+    "compare_price": 103.0
   },
   {
     "sku": "H8391001_S_LC1401",
@@ -781,7 +818,8 @@
     "official_price": 254.0,
     "official_url": "https://thann.com.hk/lc1401.html",
     "match_type": "exact",
-    "diff": -60.0
+    "diff": -60.0,
+    "compare_price": 194.0
   },
   {
     "sku": "H8391001_S_MF0809",
@@ -797,7 +835,8 @@
     "official_price": 560.0,
     "official_url": "https://thann.com.hk/mf0809.html",
     "match_type": "exact",
-    "diff": -132.0
+    "diff": -132.0,
+    "compare_price": 428.0
   },
   {
     "sku": "H8391001_S_MF0810",
@@ -845,7 +884,8 @@
     "official_price": 203.0,
     "official_url": "https://thann.com.hk/oe0227.html",
     "match_type": "exact",
-    "diff": 35.0
+    "diff": 35.0,
+    "compare_price": 238.0
   },
   {
     "sku": "H8391001_S_OE0312",
@@ -861,7 +901,8 @@
     "official_price": 229.0,
     "official_url": "https://thann.com.hk/oe0312.html",
     "match_type": "exact",
-    "diff": -55.0
+    "diff": -55.0,
+    "compare_price": 174.0
   },
   {
     "sku": "H8391001_S_OE0313",
@@ -877,7 +918,8 @@
     "official_price": 161.0,
     "official_url": "https://thann.com.hk/oe0313.html",
     "match_type": "exact",
-    "diff": -39.0
+    "diff": -39.0,
+    "compare_price": 122.0
   },
   {
     "sku": "H8391001_S_OE0408",
@@ -909,7 +951,8 @@
     "official_price": 144.0,
     "official_url": "https://thann.com.hk/oe0522.html",
     "match_type": "exact",
-    "diff": -35.0
+    "diff": -35.0,
+    "compare_price": 109.0
   },
   {
     "sku": "H8391001_S_OE0617",
@@ -925,7 +968,8 @@
     "official_price": 144.0,
     "official_url": "https://thann.com.hk/oe0617.html",
     "match_type": "exact",
-    "diff": -35.0
+    "diff": -35.0,
+    "compare_price": 109.0
   },
   {
     "sku": "H8391001_S_OE0804",
@@ -941,7 +985,8 @@
     "official_price": 271.0,
     "official_url": "https://thann.com.hk/oe0804.html",
     "match_type": "exact",
-    "diff": -64.0
+    "diff": -64.0,
+    "compare_price": 207.0
   },
   {
     "sku": "H8391001_S_OE0810",
@@ -957,7 +1002,8 @@
     "official_price": 560.0,
     "official_url": "https://thann.com.hk/oe0810.html",
     "match_type": "exact",
-    "diff": -132.0
+    "diff": -132.0,
+    "compare_price": 428.0
   },
   {
     "sku": "H8391001_S_OE0813",
@@ -973,7 +1019,8 @@
     "official_price": 450.0,
     "official_url": "https://thann.com.hk/oe0813.html",
     "match_type": "exact",
-    "diff": -107.0
+    "diff": -107.0,
+    "compare_price": 343.0
   },
   {
     "sku": "H8391001_S_OE0819",
@@ -989,7 +1036,8 @@
     "official_price": 229.0,
     "official_url": "https://thann.com.hk/oe0819.html",
     "match_type": "exact",
-    "diff": -55.0
+    "diff": -55.0,
+    "compare_price": 174.0
   },
   {
     "sku": "H8391001_S_OE0910",
@@ -1005,7 +1053,8 @@
     "official_price": 424.0,
     "official_url": "https://thann.com.hk/oe0910.html",
     "match_type": "exact",
-    "diff": -100.0
+    "diff": -100.0,
+    "compare_price": 324.0
   },
   {
     "sku": "H8391001_S_PF1426",
@@ -1021,7 +1070,8 @@
     "official_price": 254.0,
     "official_url": "https://thann.com.hk/pf1426.html",
     "match_type": "exact",
-    "diff": -60.0
+    "diff": -60.0,
+    "compare_price": 194.0
   },
   {
     "sku": "H8391001_S_RC0106",
@@ -1053,7 +1103,8 @@
     "official_price": 161.0,
     "official_url": "https://thann.com.hk/rc0306.html",
     "match_type": "exact",
-    "diff": -39.0
+    "diff": -39.0,
+    "compare_price": 122.0
   },
   {
     "sku": "H8391001_S_RC0306FREEGIFT",
@@ -1069,7 +1120,8 @@
     "official_price": 161.0,
     "official_url": "https://thann.com.hk/rc0306.html",
     "match_type": "prefix",
-    "diff": null
+    "diff": 28.0,
+    "compare_price": 189.0
   },
   {
     "sku": "H8391001_S_RC0807",
@@ -1101,7 +1153,8 @@
     "official_price": 135.0,
     "official_url": "https://thann.com.hk/rc5001.html",
     "match_type": "exact",
-    "diff": -32.0
+    "diff": -32.0,
+    "compare_price": 103.0
   },
   {
     "sku": "H8391001_S_RC5209",
@@ -1117,7 +1170,8 @@
     "official_price": 339.0,
     "official_url": "https://thann.com.hk/rc5209.html",
     "match_type": "exact",
-    "diff": -80.0
+    "diff": -80.0,
+    "compare_price": 259.0
   },
   {
     "sku": "H8391001_S_RC5308",
@@ -1165,7 +1219,8 @@
     "official_price": 314.0,
     "official_url": "https://thann.com.hk/sc0320.html",
     "match_type": "exact",
-    "diff": -75.0
+    "diff": -75.0,
+    "compare_price": 239.0
   },
   {
     "sku": "H8391001_S_SC1206",
@@ -1213,7 +1268,8 @@
     "official_price": 297.0,
     "official_url": "https://thann.com.hk/sc5141.html",
     "match_type": "exact",
-    "diff": -71.0
+    "diff": -71.0,
+    "compare_price": 226.0
   },
   {
     "sku": "H8391001_S_SC5507",
@@ -1229,7 +1285,8 @@
     "official_price": 280.0,
     "official_url": "https://thann.com.hk/sc5507.html",
     "match_type": "exact",
-    "diff": -67.0
+    "diff": -67.0,
+    "compare_price": 213.0
   },
   {
     "sku": "H8391001_S_SC5513",
@@ -1261,7 +1318,8 @@
     "official_price": 484.0,
     "official_url": "https://thann.com.hk/sc5550.html",
     "match_type": "exact",
-    "diff": -1.0
+    "diff": -1.0,
+    "compare_price": 483.0
   },
   {
     "sku": "H8391001_S_SF0811",

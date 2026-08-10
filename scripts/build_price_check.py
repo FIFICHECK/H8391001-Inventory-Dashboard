@@ -95,13 +95,19 @@ def main():
             else:
                 prefix += 1
             op = official[osku]
-            diff = round(row['psp'] - op['price'], 2) if row['psp'] and op['price'] else None
+            # Compare price: prefer PSP (discount price), fall back to RSP (original price)
+            # Only use a price if it's a positive number (0 = no price set, skip)
+            def valid_price(p):
+                return p is not None and isinstance(p, (int, float)) and p > 0
+            compare_price = row['psp'] if valid_price(row['psp']) else (row['rsp'] if valid_price(row['rsp']) else None)
+            diff = round(compare_price - op['price'], 2) if compare_price is not None and op['price'] else None
             row['official_sku'] = osku
             row['official_name'] = op['name']
             row['official_price'] = op['price']
             row['official_url'] = op['url']
             row['match_type'] = match_type
-            row['diff'] = diff  # PSP - official
+            row['diff'] = diff  # compare_price (PSP or RSP fallback) - official
+            row['compare_price'] = compare_price
         else:
             none += 1
             row['official_sku'] = None
