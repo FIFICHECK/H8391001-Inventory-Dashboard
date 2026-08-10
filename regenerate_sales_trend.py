@@ -24,7 +24,15 @@ gmv_monthly_total = round(sum(gmv_daily.values()), 2)
 
 # GMV by hour
 all_hours_labels = [f"{h:02d}" for h in range(24)]
-gmv_hour = [round(sum(gmv_hourly.get(d, {}).get(f"{h:02d}", 0) for d in dates), 2) for h in range(24)]
+def _hour_lookup(day_hours, h):
+    """gmv_hourly keys may be unpadded ('3') or padded ('03')"""
+    if day_hours is None:
+        return 0
+    for k in (f"{h:02d}", str(h)):
+        if k in day_hours:
+            return day_hours[k]
+    return 0
+gmv_hour = [round(sum(_hour_lookup(gmv_hourly.get(d), h) for d in dates), 2) for h in range(24)]
 
 # Day of week
 DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -86,7 +94,8 @@ avg_order_value = round(total_gmv / total_orders, 2) if total_orders > 0 else 0
 # GMV by date-hour
 gmv_by_date_hour = {}
 for ds in labels_date:
-    gmv_by_date_hour[ds] = [round(gmv_hourly.get(ds, {}).get(f"{h:02d}", 0), 2) for h in range(24)]
+    day_hours = gmv_hourly.get(ds, {})
+    gmv_by_date_hour[ds] = [round(_hour_lookup(day_hours, h), 2) for h in range(24)]
 
 print(f"Total GMV: ${total_gmv:,.2f}")
 print(f"Total Orders: {total_orders}")
