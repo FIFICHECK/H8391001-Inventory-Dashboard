@@ -3631,6 +3631,16 @@
     }
   }
 };
+    
+    let currentSalesChart = 'gmvByDate';
+    let currentDateFilter = '';
+    let currentMonthFilter = '';
+    let currentYearFilter = '';
+    let currentDateFrom = '';
+    let currentDateTo = '';
+    let isInitialLoad = true;
+    let salesChartInstance = null;
+
     function populateSalesFilters() {
         const dateSelect = document.getElementById('salesDateFilter');
         const dates = salesTrendData.gmv_by_date.labels || [];
