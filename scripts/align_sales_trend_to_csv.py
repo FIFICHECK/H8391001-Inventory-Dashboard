@@ -280,7 +280,7 @@ def main():
     data['summary']['total_gmv'] = total_gmv
     data['summary']['total_orders'] = total_orders
     data['summary']['avg_order_value'] = round(total_gmv / total_orders, 2) if total_orders else 0
-    data['summary']['date_range'] = '2026-01-01 to 2026-08-09'
+    data['summary']['date_range'] = f"{min(data['gmv_by_date']['labels'])} to {max(data['gmv_by_date']['labels'])}"
     data['summary']['this_month'] = {'label': '2026-08', 'gmv': aug_gmv, 'orders': aug_orders,
                                      'avg': round(aug_gmv / aug_orders, 2) if aug_orders else 0}
     data['summary']['last_month'] = {'label': '2026-07', 'gmv': csv_totals['2026-07'],
