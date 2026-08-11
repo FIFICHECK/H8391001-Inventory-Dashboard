@@ -2460,6 +2460,7 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
     let pspHistory = {};
     let trendChart = null;
     let trendPopupTimer = null;
+    let trendPopupSku = null;  // which SKU the popup is currently showing (for toggle)
 
     function trendCell(sku) {
         const hist = pspHistory[sku];
@@ -2478,6 +2479,12 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
         if (!hist) return;
         const dates = Object.keys(hist).sort();
         if (!dates.length) return;
+        // Toggle: clicking the SAME SKU's button again closes the popup
+        const popupEl = document.getElementById('trendPopup');
+        if (trendPopupSku === sku && popupEl && popupEl.style.display === 'block') {
+            hideTrendPopup();
+            return;
+        }
         hideTrendPopup();
         const popup = document.getElementById('trendPopup');
         const canvas = document.getElementById('trendPopupChart');
@@ -2514,7 +2521,7 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            label: function(ctx) { return 'PSP: $' + ctx.parsed.y.toFixed(2); }
+                            label: function(ctx) { return '價格: $' + ctx.parsed.y.toFixed(2); }
                         }
                     }
                 },
@@ -2529,12 +2536,14 @@ if (isSkuChart) html += '<th class="text-start">SKU ID</th><th class="text-start
         popup.style.display = 'block';
         popup.style.left = Math.min(rect.left, window.innerWidth - 340) + 'px';
         popup.style.top = (rect.bottom + 8) + 'px';
+        trendPopupSku = sku;  // remember which SKU opened it (for toggle-close)
     }
 
     function hideTrendPopup() {
         const popup = document.getElementById('trendPopup');
         if (popup) popup.style.display = 'none';
         if (trendChart) { trendChart.destroy(); trendChart = null; }
+        trendPopupSku = null;
     }
 
     function fmtDiff(d, comparePrice, psp, rsp, officialPrice) {
