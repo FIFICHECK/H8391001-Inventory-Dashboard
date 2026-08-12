@@ -26,7 +26,10 @@ from collections import defaultdict
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_JS = os.path.join(REPO, 'data/sales_trend_data.js')
-DEFAULT_CSV = '/home/snkwok/.hermes/profiles/hermes1/cache/documents/doc_e8b50865f63f_by_sku_-_2026-08-10T120958.438.csv'
+# Stable repo copy of the user's by_sku CSV (reconstructed 2026-08-12 from the
+# last aligned sales_trend_data.js after the original upload was evicted from
+# the hermes cache). Rebuild with scripts/reconstruct_by_sku_csv.py if needed.
+DEFAULT_CSV = os.path.join(REPO, 'data/by_sku_2026-01-07.tsv')
 CSV_PATH = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_CSV
 
 # Months present in CSV (Jan-Jul 2026). Aug stays Exchange-sourced.
