@@ -218,8 +218,11 @@ def main():
 
     # Report date: read from the raw report CSV (kept in reports/) which has the
     # "Date,YYYY/MM/DD" header line — inventory_all.csv is cleaned (header stripped).
+    # Glob newest inventory_report_*.csv first (filename is download-time-stamped).
+    import glob as _glob
     report_date = ''
-    for candidate in ['reports/inventory_report_20260809_033735.csv', CSV_PATH]:
+    candidates = sorted(_glob.glob('reports/inventory_report_*.csv'), reverse=True) + [CSV_PATH]
+    for candidate in candidates:
         try:
             with open(candidate, encoding='utf-8-sig') as f:
                 for line in f:

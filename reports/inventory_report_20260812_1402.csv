@@ -1,4 +1,9 @@
-﻿Merchant ID,Merchant Product ID,Primary SKU,Merchant SKU ID,SKU Name,SKU Name (Chi),Warehouse ID,StockLevel,Online Status,Invisible,Force Out Of Stock,Create Date,Offline Date,Brand Name (EN),Brand Name (CHI),Height,Width,Depth,Packing Spec(EN),Packing Spec(CHI),Primary Category Code,Primary Category Name (CHI),Currency,Original Price,Discount Price,Discount Rate(%),VIP Discount Price,VIP Discount Rate(%),GOLD VIP Discount Price,GOLD VIP Discount Rate(%),DIAMOND VIP Discount Price,DIAMOND VIP Discount Rate(%),
+﻿Stock Level Summary Report
+Merchant ID,H8391001
+Merchant Name,THANN
+Date,2026/08/10
+,,,,,,,,,,,,,,,Packing Dimension
+Merchant ID,Merchant Product ID,Primary SKU,Merchant SKU ID,SKU Name,SKU Name (Chi),Warehouse ID,StockLevel,Online Status,Invisible,Force Out Of Stock,Create Date,Offline Date,Brand Name (EN),Brand Name (CHI),Height,Width,Depth,Packing Spec(EN),Packing Spec(CHI),Primary Category Code,Primary Category Name (CHI),Currency,Original Price,Discount Price,Discount Rate(%),VIP Discount Price,VIP Discount Rate(%),GOLD VIP Discount Price,GOLD VIP Discount Rate(%),DIAMOND VIP Discount Price,DIAMOND VIP Discount Rate(%),
 H8391001,2021xmax_A1,Y,H8391001_S_2021xmax_A1,Christmas Set - Delightful Scent (A1),聖誕套裝 - Delightful Scent (A1),H839100101,0,offline,N,N,20-Oct-2021,12-Apr-2024,THANN,THANN,200,200,200,,,AA13506010001,女士香水,HKD,510.0,434.0,14.90196, , , , , , ,
 H8391001,2021xmax_A2,Y,H8391001_S_2021xmax_A2,Christmas Set - Delightful Scent (A2),聖誕套裝 - Delightful Scent (A2),H839100101,0,offline,N,N,13-Dec-2021,12-Apr-2024,THANN,THANN,50,50,50,,,AA13506010001,女士香水,HKD,510.0,434.0,14.90196, , , , , , ,
 H8391001,2021xmax_B1,Y,H8391001_S_2021xmax_B1,Christmas Set - Car Aroma Special (B1) (With Christmas Gift Box),聖誕套裝 - Car Aroma Special (B1) (連聖誕禮盒),H839100101,0,offline,N,N,20-Oct-2021,12-Apr-2024,THANN,THANN,165,60,60,,,AA18554010001,香薰油,HKD,870.0,740.0,14.94253, , , , , , ,
