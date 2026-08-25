@@ -237,10 +237,20 @@ def main():
     type_rows = ''.join(cat_row_html(k, v, True) for k, v in sorted(cat_type.items(), key=lambda x: x[1]['products'], reverse=True))
     full_rows = ''.join(cat_row_html(k, v, False) for k, v in sorted(cat_full.items(), key=lambda x: x[1]['products'], reverse=True) if k and k != 'nan')
 
-    # SKU Status cards rows — FULL lists (both sides) with data-side attr for filtering
-    online_s_rows = ''.join(status_card_full_row(r, 'online') for r in sorted(rows, key=lambda x: x['stock'], reverse=True))
-    invisible_y_rows = ''.join(status_card_full_row(r, 'invisible') for r in sorted(rows, key=lambda x: x['stock'], reverse=True))
-    foos_y_rows = ''.join(status_card_full_row(r, 'foos') for r in sorted(rows, key=lambda x: x['stock'], reverse=True))
+    # SKU Status cards rows — FULL lists, side-first sort (offline→online, invisible Y→N, foos Y→N),
+    # then stock descending within each side group.
+    def _side_first_key(r, dim):
+        if dim == 'online':
+            grp = 0 if r['online'] != 'ONLINE' else 1   # Offline group first, then Online
+        elif dim == 'invisible':
+            grp = 0 if r['invisible'] == 'Y' else 1     # Invisible Y first, then Visible N
+        else:
+            grp = 0 if r['foos'] == 'Y' else 1          # Force OOS first, then Available
+        return (grp, -r['stock'])
+
+    online_s_rows = ''.join(status_card_full_row(r, 'online') for r in sorted(rows, key=lambda x: _side_first_key(x, 'online')))
+    invisible_y_rows = ''.join(status_card_full_row(r, 'invisible') for r in sorted(rows, key=lambda x: _side_first_key(x, 'invisible')))
+    foos_y_rows = ''.join(status_card_full_row(r, 'foos') for r in sorted(rows, key=lambda x: _side_first_key(x, 'foos')))
 
     # Brand options
     brand_options = '<option value="all">All Brands</option>'
