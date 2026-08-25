@@ -68,7 +68,7 @@ def esc(s, limit=70):
 
 def sku_row(row, show_brand=True, is_new=False):
     sku = esc(row['sku'], 25)
-    name = esc(row['name'])
+    name = esc(row['name_chi'] or row['name'])
     inv = row['stock']
     cls, label = get_status(inv)
     badge = f'<span class="badge badge-{cls}">{label}</span>'
@@ -84,7 +84,7 @@ def sku_row(row, show_brand=True, is_new=False):
 
 def status_card_row(row):
     sku = esc(row['sku'], 25)
-    name = esc(row['name'])
+    name = esc(row['name_chi'] or row['name'])
     inv = row['stock']
     cls, label = get_status(inv)
     badge = f'<span class="badge badge-{cls}">{label}</span>'
@@ -94,6 +94,37 @@ def status_card_row(row):
             f'<td><a href="{sku_url}" target="_blank" onclick="event.stopPropagation()"><code>{sku}</code></a></td>'
             f'<td title="{name}">{name[:55]}{"..." if len(name) > 55 else ""}</td>'
             f'<td class="text-end">{inv:,}</td><td>{badge}</td></tr>')
+
+def status_card_full_row(row, dim):
+    """Row for the By SKU Status cards — includes a data-side attr + a badge column
+    showing WHICH side of the dimension the SKU is on (online/offline, Y/N, Y/N).
+    dim: 'online' | 'invisible' | 'foos'"""
+    sku = esc(row['sku'], 25)
+    name = esc(row['name_chi'] or row['name'])
+    inv = row['stock']
+    cls, label = get_status(inv)
+    badge = f'<span class="badge badge-{cls}">{label}</span>'
+    sku_url = f"https://www.hktvmall.com/hktv/p/{row['sku'].replace(' ', '')}"
+    onclick = f"showDetail('{sku}',\"{name}\",{inv},'{cls}')"
+    if dim == 'online':
+        side = 'online' if row['online'] == 'ONLINE' else 'offline'
+        side_badge = ('<span class="badge" style="background:#0d6efd;color:white">🌐 Online</span>'
+                      if side == 'online'
+                      else '<span class="badge" style="background:#6c757d;color:white">⚫ Offline</span>')
+    elif dim == 'invisible':
+        side = 'Y' if row['invisible'] == 'Y' else 'N'
+        side_badge = ('<span class="badge" style="background:#ffc107;color:#212529">👁️ Invisible Y</span>'
+                      if side == 'Y'
+                      else '<span class="badge" style="background:#198754;color:white">👀 Visible N</span>')
+    else:  # foos
+        side = 'Y' if row['foos'] == 'Y' else 'N'
+        side_badge = ('<span class="badge" style="background:#dc3545;color:white">🚫 Force OOS</span>'
+                      if side == 'Y'
+                      else '<span class="badge" style="background:#198754;color:white">✅ Available</span>')
+    return (f'<tr data-side="{side}" onclick="{onclick}">'
+            f'<td><a href="{sku_url}" target="_blank" onclick="event.stopPropagation()"><code>{sku}</code></a></td>'
+            f'<td title="{name}">{name[:55]}{"..." if len(name) > 55 else ""}</td>'
+            f'<td class="text-end">{inv:,}</td><td>{badge}</td><td>{side_badge}</td></tr>')
 
 def main():
     rows = load_rows()
@@ -206,10 +237,10 @@ def main():
     type_rows = ''.join(cat_row_html(k, v, True) for k, v in sorted(cat_type.items(), key=lambda x: x[1]['products'], reverse=True))
     full_rows = ''.join(cat_row_html(k, v, False) for k, v in sorted(cat_full.items(), key=lambda x: x[1]['products'], reverse=True) if k and k != 'nan')
 
-    # SKU Status cards rows
-    online_s_rows = ''.join(status_card_row(r) for r in sorted((x for x in rows if x['online'] == 'ONLINE'), key=lambda x: x['stock'], reverse=True))
-    invisible_y_rows = ''.join(status_card_row(r) for r in sorted((x for x in rows if x['invisible'] == 'Y'), key=lambda x: x['stock'], reverse=True))
-    foos_y_rows = ''.join(status_card_row(r) for r in sorted((x for x in rows if x['foos'] == 'Y'), key=lambda x: x['stock'], reverse=True))
+    # SKU Status cards rows — FULL lists (both sides) with data-side attr for filtering
+    online_s_rows = ''.join(status_card_full_row(r, 'online') for r in sorted(rows, key=lambda x: x['stock'], reverse=True))
+    invisible_y_rows = ''.join(status_card_full_row(r, 'invisible') for r in sorted(rows, key=lambda x: x['stock'], reverse=True))
+    foos_y_rows = ''.join(status_card_full_row(r, 'foos') for r in sorted(rows, key=lambda x: x['stock'], reverse=True))
 
     # Brand options
     brand_options = '<option value="all">All Brands</option>'
@@ -330,44 +361,28 @@ def main():
         if m:
             html = pattern.sub(lambda mm: mm.group(1) + brand_options + mm.group(3), html, count=1)
 
-    # 7. SKU Status cards: replace headers + tbody
-    # Online card
-    html = re.sub(r'(🌐 Online Status</span>\s*<span class="text-dark">)[^<]+', rf'\g<1>{online_count} online / {offline_count} offline', html)
-    html = re.sub(r'(👁️ Invisible</span>\s*<span class="text-dark">)[^<]+', rf'\g<1>{inv_y} Y / {inv_n} N', html)
-    html = re.sub(r'(🚫 Force OOS</span>\s*<span class="text-dark">)[^<]+', rf'\g<1>{foos_y} Y / {foos_n} N', html)
+    # 7. SKU Status cards: replace count spans + tbody (id-based — cards show ALL SKUs, filterable by data-side)
+    def replace_count(html, count_id, text):
+        pattern = re.compile(r'(id="' + re.escape(count_id) + r'">)[^<]*')
+        m = pattern.search(html)
+        if not m:
+            print(f'⚠️ count span #{count_id} not found')
+            return html
+        return pattern.sub(lambda mm: mm.group(1) + text, html)
 
-    # Replace the 3 status card tbodies (they have no id, order: online, invisible, force)
-    def replace_nth_tbody_in_pane(html, pane_id, content, nth):
-        pane_start = html.find(f'id="{pane_id}"')
-        pane_end = html.find('</div>\n            <div class="tab-pane', pane_start)
-        if pane_end == -1:
-            pane_end = pane_start + 20000
-        pane = html[pane_start:pane_end]
-        idx = 0
-        count = 0
-        pos = 0
-        while True:
-            tb = pane.find('<tbody>', pos)
-            if tb == -1:
-                break
-            count += 1
-            if count == nth:
-                te = pane.find('</tbody>', tb)
-                replacement = pane[:tb + len('<tbody>')] + content + pane[te:]
-                return html[:pane_start] + replacement + html[pane_end:]
-            pos = tb + 7
-        print(f'⚠️ tbody #{nth} in pane #{pane_id} not found')
-        return html
+    html = replace_count(html, 'statusCountOnline', f'{online_count} online / {offline_count} offline')
+    html = replace_count(html, 'statusCountInvisible', f'{inv_y} Y / {inv_n} N')
+    html = replace_count(html, 'statusCountFoos', f'{foos_y} Y / {foos_n} N')
 
-    html = replace_nth_tbody_in_pane(html, 'skustatus', online_s_rows, 1)
-    html = replace_nth_tbody_in_pane(html, 'skustatus', invisible_y_rows, 2)
-    html = replace_nth_tbody_in_pane(html, 'skustatus', foos_y_rows, 3)
+    html = replace_tbody(html, 'statusBodyOnline', online_s_rows)
+    html = replace_tbody(html, 'statusBodyInvisible', invisible_y_rows)
+    html = replace_tbody(html, 'statusBodyFoos', foos_y_rows)
 
-    # 8. Alerts cards: Zero + Low
+    # 8. Alerts cards: Zero + Low (id-based)
     html = re.sub(r'(🚫 Zero Stock \()[^)]*', rf'\g<1>{zero_count}', html)
     html = re.sub(r'(⚠️ Low Stock \()[^)]*', rf'\g<1>{low_count}', html)
-    html = replace_nth_tbody_in_pane(html, 'alerts', zero_rows, 1)
-    html = replace_nth_tbody_in_pane(html, 'alerts', low_rows, 2)
+    html = replace_tbody(html, 'alertsZeroBody', zero_rows)
+    html = replace_tbody(html, 'alertsLowBody', low_rows)
 
     # 9. Category footer date
     html = re.sub(r'(\* 數據日期: )[^|]+', rf'\g<1>{report_date}', html)
