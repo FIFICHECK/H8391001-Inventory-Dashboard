@@ -28,7 +28,7 @@ from playwright.async_api import async_playwright, TimeoutError as PwTimeout
 # ── Config ─────────────────────────────────────────────────────────────────────
 MMS_URL  = "https://merchant.shoalter.com"
 MMS_USER = "***REMOVED***"
-MMS_PASS = os.environ.get("MMS_PASSWORD", "***REMOVED***!!!")
+MMS_PASS = os.environ.get("MMS_PASSWORD", "***REMOVED***")
 STORE_ID = "H8391001"
 HKT      = timezone(timedelta(hours=8))
 
