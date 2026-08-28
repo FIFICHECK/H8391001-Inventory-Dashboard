@@ -318,20 +318,27 @@ def main():
     html = re.sub(r'📅 Order Report: [^|]+', f'📅 Order Report: {order_report_date_str}', html)
     html = re.sub(r'🔄 [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9:]{8}', f'🔄 {generated_time}', html)
 
-    # 2. KPI cards
-    html = re.sub(r'(id="kpiTotal"[^>]*>)[^<]*', r'\g<1>', html)
-    html = html.replace('style="color:var(--primary)">0</div><div class="kpi-label">📦 Total SKUs',
-                        f'style="color:var(--primary)">{total_products}</div><div class="kpi-label">📦 Total SKUs')
-    html = html.replace('style="color:var(--success)">0</div><div class="kpi-label">📊 Total Stock',
-                        f'style="color:var(--success)">{total_stock:,}</div><div class="kpi-label">📊 Total Stock')
-    html = html.replace('style="color:var(--danger)">0</div><div class="kpi-label">🚫 Zero (0)',
-                        f'style="color:var(--danger)">{zero_count}</div><div class="kpi-label">🚫 Zero (0)')
-    html = html.replace('style="color:var(--warning)">0</div><div class="kpi-label">⚠️ Low (1-9)',
-                        f'style="color:var(--warning)">{low_count}</div><div class="kpi-label">⚠️ Low (1-9)')
-    html = html.replace('style="color:var(--success)">0</div><div class="kpi-label">🟢 Normal (10-49)',
-                        f'style="color:var(--success)">{normal_count}</div><div class="kpi-label">🟢 Normal (10-49)')
-    html = html.replace('style="color:var(--primary)">0</div><div class="kpi-label">🔵 High (50+)',
-                        f'style="color:var(--primary)">{high_count}</div><div class="kpi-label">🔵 High (50+)')
+    # 2. KPI cards — regex on label anchor; robust to ANY current value
+    #    (2026-08-28 fix: old replace-on-'0' pattern no-oped once cards held
+    #    non-zero values, freezing them at stale numbers)
+    kpi_cards = [
+        ('var(--primary)', '📦 Total SKUs',      str(total_products)),
+        ('var(--success)', '📊 Total Stock',     f'{total_stock:,}'),
+        ('var(--danger)',  '🚫 Zero (0)',        str(zero_count)),
+        ('var(--warning)', '⚠️ Low (1-9)',       str(low_count)),
+        ('var(--success)', '🟢 Normal (10-49)',  str(normal_count)),
+        ('var(--primary)', '🔵 High (50+)',      str(high_count)),
+    ]
+    for _kpi_color, _kpi_label, _kpi_value in kpi_cards:
+        _kpi_pat = re.compile(r'(<div class="kpi-value" style="color:' + re.escape(_kpi_color) + r'">)[^<]*(</div><div class="kpi-label">)' + re.escape(_kpi_label))
+        _kpi_html, _kpi_n = _kpi_pat.subn(
+            lambda m, v=_kpi_value, l=_kpi_label: m.group(1) + v + m.group(2) + l,
+            html)
+        if _kpi_n == 0:
+            print(f'⚠️ KPI card not found: {_kpi_label}')
+        else:
+            html = _kpi_html
+            print(f'✅ KPI {_kpi_label} -> {_kpi_value}')
 
     # 3. Tab labels
     html = re.sub(r'(data-bs-target="#all">📋 )[^<]*', rf'\g<1>All ({total_products})', html)
