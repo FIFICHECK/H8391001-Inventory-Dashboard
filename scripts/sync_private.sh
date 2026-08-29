@@ -6,7 +6,10 @@ SRC="${1:-/home/snkwok/H8391001-Inventory-Dashboard}"
 DST=/home/snkwok/dashboard-private-data/H8391001
 cd "$SRC"
 mkdir -p "$DST/data" "$DST/reports"
-cp -f index.html "$DST/" 2>/dev/null || true
+# 只喺 index.html 係完整 dashboard（冇 dashFrame marker）先同步 —— loader 唔可以冚 private
+if ! grep -q 'dashFrame' index.html 2>/dev/null; then
+  cp -f index.html "$DST/" 2>/dev/null || true
+fi
 cp -f data/*.csv data/*.json data/*.js "$DST/data/" 2>/dev/null || true
 cp -rf reports/* "$DST/reports/" 2>/dev/null || true
 cd "$DST"
