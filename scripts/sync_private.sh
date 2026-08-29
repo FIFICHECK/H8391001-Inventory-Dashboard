@@ -8,7 +8,9 @@ cd "$SRC"
 mkdir -p "$DST/data" "$DST/reports"
 # 只喺 index.html 係完整 dashboard（冇 dashFrame marker）先同步 —— loader 唔可以冚 private
 if ! grep -q 'dashFrame' index.html 2>/dev/null; then
-  cp -f index.html "$DST/" 2>/dev/null || true
+  cp -f index.html /tmp/h839_sync_index.html
+  bash /home/snkwok/scripts/gate_strip_shared.sh /tmp/h839_sync_index.html H8391001 >/dev/null
+  cp -f /tmp/h839_sync_index.html "$DST/index.html" 2>/dev/null || true
 fi
 cp -f data/*.csv data/*.json data/*.js "$DST/data/" 2>/dev/null || true
 cp -rf reports/* "$DST/reports/" 2>/dev/null || true
