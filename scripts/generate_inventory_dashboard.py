@@ -57,7 +57,7 @@ def get_status(inv):
     if inv == 0:
         return 'zero', '🚫 Zero (0)'
     elif inv < 10:
-        return 'low', '⚠️ Low (1-9)'
+        return 'low', '⚠️ 低庫存 (1-9)'
     elif inv < 50:
         return 'normal', '🟢 Normal (10-49)'
     return 'high', '🔵 High (50+)'
@@ -76,7 +76,7 @@ def sku_row(row, show_brand=True, is_new=False):
     inv = row['stock']
     cls, label = get_status(inv)
     badge = f'<span class="badge badge-{cls}">{label}</span>'
-    new_badge = '<span class="badge badge-new" style="background:#FF6B35;color:white;margin-left:4px;">🆕 New</span>' if is_new else ''
+    new_badge = '<span class="badge badge-new" style="background:#FF6B35;color:white;margin-left:4px;">🆕 新</span>' if is_new else ''
     brand_lower = row['brand'].lower().replace('"', '&quot;')
     sku_url = f"https://www.hktvmall.com/hktv/p/{row['sku'].replace(' ', '')}"
     onclick = f"showDetail('{sku}',\"{name}\",{inv},'{cls}')"
@@ -122,7 +122,7 @@ def status_card_full_row(row, dim):
                       else '<span class="badge" style="background:#198754;color:white">👀 Visible N</span>')
     else:  # foos
         side = 'Y' if row['foos'] == 'Y' else 'N'
-        side_badge = ('<span class="badge" style="background:#dc3545;color:white">🚫 Force OOS</span>'
+        side_badge = ('<span class="badge" style="background:#dc3545;color:white">🚫 強制缺貨</span>'
                       if side == 'Y'
                       else '<span class="badge" style="background:#198754;color:white">✅ Available</span>')
     return (f'<tr data-side="{side}" onclick="{onclick}">'
@@ -326,10 +326,10 @@ def main():
     #    (2026-08-28 fix: old replace-on-'0' pattern no-oped once cards held
     #    non-zero values, freezing them at stale numbers)
     kpi_cards = [
-        ('var(--primary)', '📦 Total SKUs',      str(total_products)),
-        ('var(--success)', '📊 Total Stock',     f'{total_stock:,}'),
+        ('var(--primary)', '📦 總 SKU 數',      str(total_products)),
+        ('var(--success)', '📊 總庫存',     f'{total_stock:,}'),
         ('var(--danger)',  '🚫 Zero (0)',        str(zero_count)),
-        ('var(--warning)', '⚠️ Low (1-9)',       str(low_count)),
+        ('var(--warning)', '⚠️ 低庫存 (1-9)',       str(low_count)),
         ('var(--success)', '🟢 Normal (10-49)',  str(normal_count)),
         ('var(--primary)', '🔵 High (50+)',      str(high_count)),
     ]
@@ -345,12 +345,12 @@ def main():
             print(f'✅ KPI {_kpi_label} -> {_kpi_value}')
 
     # 3. Tab labels
-    html = re.sub(r'(data-bs-target="#all">📋 )[^<]*', rf'\g<1>All ({total_products})', html)
-    html = re.sub(r'(data-bs-target="#skuid">🔢 By Online SKU)[^<]*', rf'\g<1> ({online_count})', html)
-    html = re.sub(r'(data-bs-target="#brand">🏷️ )[^<]*', rf'\g<1>Brand ({len(brand_summary)})', html)
-    html = re.sub(r'(data-bs-target="#alerts">⚠️ Alerts)[^<]*', rf'\g<1> ({zero_count + low_count})', html)
-    html = re.sub(r'(data-bs-target="#newsku">🆕 New SKU)[^<]*', rf'\g<1> ({new_sku_count})', html)
-    html = re.sub(r'(data-bs-target="#pricecheck">💰 Price Check)[^<]*', rf'\g<1> ({price_count})', html)
+    html = re.sub(r'(data-bs-target="#all">📋 )[^<]*', rf'\g<1>全部 ({total_products})', html)
+    html = re.sub(r'(data-bs-target="#skuid">🔢 網上 SKU)[^<]*', rf'\g<1> ({online_count})', html)
+    html = re.sub(r'(data-bs-target="#brand">🏷️ )[^<]*', rf'\g<1>品牌 ({len(brand_summary)})', html)
+    html = re.sub(r'(data-bs-target="#alerts">⚠️ 警示)[^<]*', rf'\g<1> ({zero_count + low_count})', html)
+    html = re.sub(r'(data-bs-target="#newsku">🆕 新 SKU)[^<]*', rf'\g<1> ({new_sku_count})', html)
+    html = re.sub(r'(data-bs-target="#pricecheck">💰 價格檢查)[^<]*', rf'\g<1> ({price_count})', html)
 
     # 4. tableAll tbody
     def replace_tbody(html, tbody_id, content):
@@ -400,8 +400,8 @@ def main():
     html = replace_tbody(html, 'statusBodyFoos', foos_y_rows)
 
     # 8. Alerts cards: Zero + Low (id-based)
-    html = re.sub(r'(🚫 Zero Stock \()[^)]*', rf'\g<1>{zero_count}', html)
-    html = re.sub(r'(⚠️ Low Stock \()[^)]*', rf'\g<1>{low_count}', html)
+    html = re.sub(r'(🚫 零庫存 \()[^)]*', rf'\g<1>{zero_count}', html)
+    html = re.sub(r'(⚠️ 低庫存 \()[^)]*', rf'\g<1>{low_count}', html)
     html = replace_tbody(html, 'alertsZeroBody', zero_rows)
     html = replace_tbody(html, 'alertsLowBody', low_rows)
 
