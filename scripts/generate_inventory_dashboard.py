@@ -64,7 +64,11 @@ def get_status(inv):
 
 def esc(s, limit=70):
     s = str(s)[:limit]
-    return s.replace("'", "&apos;").replace('"', '&quot;')
+    return (s.replace('&', '&amp;')
+             .replace('<', '&lt;')
+             .replace('>', '&gt;')
+             .replace('"', '&quot;')
+             .replace("'", '&#39;'))
 
 def sku_row(row, show_brand=True, is_new=False):
     sku = esc(row['sku'], 25)
