@@ -19,3 +19,9 @@ logs/
 reports/order_reports/*.xlsx
 reports/inventory_report_*.csv
 data/inventory_report_*.csv
+
+
+# B pilot (2026-08-29): 完整 dashboard + data 移去 private repo (dashboard-private-data)
+data/*
+!data/access_allowlist.json
+reports/*
