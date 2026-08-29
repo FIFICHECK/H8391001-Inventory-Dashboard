@@ -13,3 +13,4 @@ data/inventory_all.csv
 data/order_data.json
 data/by_sku_*.tsv
 data/sales_trend_data.js
+logs/
