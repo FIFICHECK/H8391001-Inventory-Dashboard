@@ -1,1 +1,15 @@
 .venv/
+__pycache__/
+
+# 🔒 Sensitive business data — NOT committed to public repo.
+# Regenerated locally by cron jobs (see h8391001-inventory-dashboard skill):
+#   - inventory_all.csv  ← downloaded from Exchange portal by 2PM stock cron
+#   - order_data.json    ← merged from reports/order_reports/*.xlsx by DOR cron
+#   - by_sku_*.tsv       ← user-provided by-SKU sales CSV (align_sales_trend_to_csv.py)
+#   - sales_trend_data.js← generated from order_data.json (embedded into index.html at build)
+# NOTE: price_check_data.json + psp_history.json are FETCHED by the frontend at runtime
+# and MUST remain tracked — do not add them here.
+data/inventory_all.csv
+data/order_data.json
+data/by_sku_*.tsv
+data/sales_trend_data.js
