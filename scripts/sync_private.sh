@@ -1,0 +1,20 @@
+#!/bin/bash
+# sync_private.sh — H8391001: copy index.html + data/ + reports/ to the PRIVATE repo + push
+# B pilot (2026-08-29): dashboard + data 唔再喺 public repo；由 crons 喺 build 完成後 call
+set -euo pipefail
+SRC="${1:-/home/snkwok/H8391001-Inventory-Dashboard}"
+DST=/home/snkwok/dashboard-private-data/H8391001
+cd "$SRC"
+mkdir -p "$DST/data" "$DST/reports"
+cp -f index.html "$DST/" 2>/dev/null || true
+cp -f data/*.csv data/*.json data/*.js "$DST/data/" 2>/dev/null || true
+cp -rf reports/* "$DST/reports/" 2>/dev/null || true
+cd "$DST"
+if git status --short | grep -q .; then
+  git add -A
+  git -c user.email="hermes@fificheck.local" -c user.name="Hermes" commit -q -m "H8391001 daily update $(date '+%F %T')"
+  git push origin main -q
+  echo "✅ private repo synced ($(date '+%F %T'))"
+else
+  echo "ℹ️ 冇嘢改 — skip push"
+fi
