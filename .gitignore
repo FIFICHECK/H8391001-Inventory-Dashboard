@@ -14,3 +14,8 @@ data/order_data.json
 data/by_sku_*.tsv
 data/sales_trend_data.js
 logs/
+# 🔒 Raw report files — NOT committed (regenerated daily by cron, kept local only).
+# Report tab still shows dates/SKU/GMV; download links replaced with internal-only badges.
+reports/order_reports/*.xlsx
+reports/inventory_report_*.csv
+data/inventory_report_*.csv
