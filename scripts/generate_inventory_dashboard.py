@@ -124,7 +124,7 @@ def status_card_full_row(row, dim):
         side = 'Y' if row['foos'] == 'Y' else 'N'
         side_badge = ('<span class="badge" style="background:#dc3545;color:white">🚫 強制缺貨</span>'
                       if side == 'Y'
-                      else '<span class="badge" style="background:#198754;color:white">✅ Available</span>')
+                      else '<span class="badge" style="background:#198754;color:white">✅ 可供應</span>')
     return (f'<tr data-side="{side}" onclick="{onclick}">'
             f'<td><a href="{sku_url}" target="_blank" onclick="event.stopPropagation()"><code>{sku}</code></a></td>'
             f'<td title="{name}">{name[:55]}{"..." if len(name) > 55 else ""}</td>'
