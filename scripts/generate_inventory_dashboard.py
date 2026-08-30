@@ -112,14 +112,14 @@ def status_card_full_row(row, dim):
     onclick = f"showDetail('{sku}',\"{name}\",{inv},'{cls}')"
     if dim == 'online':
         side = 'online' if row['online'] == 'ONLINE' else 'offline'
-        side_badge = ('<span class="badge" style="background:#0d6efd;color:white">🌐 Online</span>'
+        side_badge = ('<span class="badge" style="background:#0d6efd;color:white">🌐 網上</span>'
                       if side == 'online'
-                      else '<span class="badge" style="background:#6c757d;color:white">⚫ Offline</span>')
+                      else '<span class="badge" style="background:#6c757d;color:white">⚫ 離線</span>')
     elif dim == 'invisible':
         side = 'Y' if row['invisible'] == 'Y' else 'N'
-        side_badge = ('<span class="badge" style="background:#ffc107;color:#212529">👁️ Invisible Y</span>'
+        side_badge = ('<span class="badge" style="background:#ffc107;color:#212529">👁️ 不可見 是</span>'
                       if side == 'Y'
-                      else '<span class="badge" style="background:#198754;color:white">👀 Visible N</span>')
+                      else '<span class="badge" style="background:#198754;color:white">👀 可見 否</span>')
     else:  # foos
         side = 'Y' if row['foos'] == 'Y' else 'N'
         side_badge = ('<span class="badge" style="background:#dc3545;color:white">🚫 強制缺貨</span>'
@@ -257,7 +257,7 @@ def main():
     foos_y_rows = ''.join(status_card_full_row(r, 'foos') for r in sorted(rows, key=lambda x: _side_first_key(x, 'foos')))
 
     # Brand options
-    brand_options = '<option value="all">All Brands</option>'
+    brand_options = '<option value="all">全部品牌</option>'
     for b in sorted(brand_summary.keys()):
         brand_options += f'<option value="{b.lower().replace(chr(34), "&quot;")}">{esc(b, 40)}</option>'
 
@@ -391,9 +391,9 @@ def main():
             return html
         return pattern.sub(lambda mm: mm.group(1) + text, html)
 
-    html = replace_count(html, 'statusCountOnline', f'{online_count} online / {offline_count} offline')
-    html = replace_count(html, 'statusCountInvisible', f'{inv_y} Y / {inv_n} N')
-    html = replace_count(html, 'statusCountFoos', f'{foos_y} Y / {foos_n} N')
+    html = replace_count(html, 'statusCountOnline', f'{online_count} 網上 / {offline_count} 離線')
+    html = replace_count(html, 'statusCountInvisible', f'{inv_y} 是 / {inv_n} 否')
+    html = replace_count(html, 'statusCountFoos', f'{foos_y} 是 / {foos_n} 否')
 
     html = replace_tbody(html, 'statusBodyOnline', online_s_rows)
     html = replace_tbody(html, 'statusBodyInvisible', invisible_y_rows)
