@@ -55,12 +55,12 @@ def load_rows():
 
 def get_status(inv):
     if inv == 0:
-        return 'zero', '🚫 Zero (0)'
+        return 'zero', '🚫 零庫存'
     elif inv < 10:
-        return 'low', '⚠️ 低庫存 (1-9)'
+        return 'low', '⚠️ 低庫存'
     elif inv < 50:
-        return 'normal', '🟢 Normal (10-49)'
-    return 'high', '🔵 High (50+)'
+        return 'normal', '🟢 正常'
+    return 'high', '🔵 高庫存'
 
 def esc(s, limit=70):
     s = str(s)[:limit]
@@ -328,10 +328,10 @@ def main():
     kpi_cards = [
         ('var(--primary)', '📦 總 SKU 數',      str(total_products)),
         ('var(--success)', '📊 總庫存',     f'{total_stock:,}'),
-        ('var(--danger)',  '🚫 Zero (0)',        str(zero_count)),
-        ('var(--warning)', '⚠️ 低庫存 (1-9)',       str(low_count)),
-        ('var(--success)', '🟢 Normal (10-49)',  str(normal_count)),
-        ('var(--primary)', '🔵 High (50+)',      str(high_count)),
+        ('var(--danger)',  '🚫 零庫存',        str(zero_count)),
+        ('var(--warning)', '⚠️ 低庫存',       str(low_count)),
+        ('var(--success)', '🟢 正常',  str(normal_count)),
+        ('var(--primary)', '🔵 高庫存',      str(high_count)),
     ]
     for _kpi_color, _kpi_label, _kpi_value in kpi_cards:
         _kpi_pat = re.compile(r'(<div class="kpi-value" style="color:' + re.escape(_kpi_color) + r'">)[^<]*(</div><div class="kpi-label">)' + re.escape(_kpi_label))

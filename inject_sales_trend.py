@@ -52,8 +52,8 @@ print(f"old block: {len(old_block)} chars | new block: {len(new_block)} chars")
 html = html[:start] + new_block + html[end:]
 
 # 3. Update header Order Report date (newest 235959)
-header_new = f'📅 Order Report: {newest_disp} (23:59:59)'
-hpat = re.compile(r'📅 Order Report: [\d\-]+ \(23:59:59\)')
+header_new = f'📅 訂單報表: {newest_disp} (23:59:59)'
+hpat = re.compile(r'📅 (?:Order Report|訂單報表): [\d\-]+ \(23:59:59\)')
 if hpat.search(html):
     html = hpat.sub(header_new, html)
     print("header updated to:", header_new)

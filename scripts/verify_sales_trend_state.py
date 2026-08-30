@@ -78,7 +78,7 @@ if hdrs:
           len(date_strs) >= 10 and date_strs == sorted(date_strs, reverse=True))
 
 # 4. header date
-mh = re.search(r'Order Report: (\d{4}-\d{2}-\d{2})', h)
+mh = re.search(r'(?:Order Report|訂單報表): (\d{4}-\d{2}-\d{2})', h)
 check(f'header date == {newest_date}', bool(mh) and mh.group(1) == newest_date)
 
 print('\nNext: node --check /tmp/stmt.js   (exit 0 = embedded JS valid)')
