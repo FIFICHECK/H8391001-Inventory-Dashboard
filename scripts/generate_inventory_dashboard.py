@@ -317,9 +317,9 @@ def main():
     html = open(INDEX, encoding='utf-8').read()
     orig_len = len(html)
 
-    # 1. Header dates
-    html = re.sub(r'📅 Inventory Report: [^&]+', f'📅 Inventory Report: {report_date}', html)
-    html = re.sub(r'📅 Order Report: [^|]+', f'📅 Order Report: {order_report_date_str}', html)
+    # 1. Header dates (bilingual since 2026-08-30 localization — header is Chinese now)
+    html = re.sub(r'📅 (?:Inventory Report|庫存報表): [^&]+', f'📅 庫存報表: {report_date}', html)
+    html = re.sub(r'📅 (?:Order Report|訂單報表): [^|]+', f'📅 訂單報表: {order_report_date_str}', html)
     html = re.sub(r'🔄 [0-9]{4}-[0-9]{2}-[0-9]{2} [0-9:]{8}', f'🔄 {generated_time}', html)
 
     # 2. KPI cards — regex on label anchor; robust to ANY current value
