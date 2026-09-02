@@ -12,7 +12,9 @@ This script applies:
 3. Rounding-residual normalization (normalize_monthly) — every month matches to the CENT.
 4. 其他 Others aggregate row for daily SKU charts (top-50 tail).
 5. Qty integer normalization.
-6. Summary block: total_gmv = CSV 1-7 + Exchange Aug; this/last/month_before_last.
+6. Summary block: total_gmv/orders = CSV 1-7 + ALL exchange months (dynamic);
+   this/last/month_before_last = last three months (CSV-authoritative where
+   available, else Exchange-derived) — rolls forward automatically.
 
 Usage: python3 scripts/align_sales_trend_to_csv.py
 Reads: data/sales_trend_data.js, <by_sku_csv path> (arg or default cache path)
@@ -33,12 +35,15 @@ DEFAULT_CSV = os.path.join(REPO, 'data/by_sku_2026-01-07.tsv')
 CSV_PATH = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_CSV
 
 # Months present in CSV (Jan-Jul 2026). Aug stays Exchange-sourced.
+# Months present in the user's by_sku CSV (Jan-Jul 2026) — CSV totals are authoritative.
+# Any LATER month (2026-08, 2026-09, ...) is Exchange-sourced and derived dynamically
+# from the daily order data every run, so the dashboard summary/monthly charts roll
+# forward to the newest month automatically (no hardcoded '2026-08' ceiling).
 CSV_MONTHS = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07']
-ALL_MONTHS = CSV_MONTHS + ['2026-08']
 
 
 def load_csv_monthly(path):
-    """Parse user by_sku CSV (UTF-16 LE tab-delimited) → {month: {sku: {gmv, orders, qty}}}."""
+    """Parse user by_sku CSV (UTF-16 LE tab-delimited) -> {month: {sku: {gmv, orders, qty}}}."""
     import csv
     import io
     raw = open(path, 'rb').read()
@@ -105,7 +110,7 @@ def normalize_monthly(targets, labels, vals):
 
 def main():
     if not os.path.exists(CSV_PATH):
-        print(f'⚠️ by_sku CSV not found ({CSV_PATH}) — skipping CSV alignment (keeping Exchange-based data)')
+        print(f'\u26a0\ufe0f by_sku CSV not found ({CSV_PATH}) — skipping CSV alignment (keeping Exchange-based data)')
         return
     csv_monthly = load_csv_monthly(CSV_PATH)
     data, js = load_data()
@@ -117,29 +122,45 @@ def main():
     csv_qty = {mth: round(sum(v['qty'] for v in skus.values()))
                for mth, skus in csv_monthly.items()}
 
-    # --- 1. Monthly charts from CSV (Aug from Exchange) ---
-    aug_idx = data['gmv_by_month']['labels'].index('2026-08') if '2026-08' in data['gmv_by_month']['labels'] else None
-    aug_gmv = round(sum(v for d, v in zip(data['gmv_by_date']['labels'], data['gmv_by_date']['data'])
-                        if d.startswith('2026-08')), 2)
-    aug_orders = data['summary']['this_month']['orders']
-    month_gmv = [csv_totals.get(m, 0) for m in CSV_MONTHS] + [aug_gmv]
-    month_orders = [csv_orders.get(m, 0) for m in CSV_MONTHS] + [aug_orders]
-    data['gmv_by_month'] = {'labels': ALL_MONTHS, 'data': month_gmv}
-
-    # gmv_by_sku_monthly from CSV per-SKU (all CSV SKUs), Aug from Exchange daily
-    all_skus = sorted(set().union(*[set(s.keys()) for s in csv_monthly.values()]))
     labels = data['gmv_by_date']['labels']
-    exch_skus = data['gmv_by_sku_daily']['skus']
+
+    # Exchange months = every month in the daily data that is NOT covered by the CSV.
+    # Derived fresh each run so the summary + monthly charts roll forward forever.
+    exchange_months = sorted({d[:7] for d in labels} - set(CSV_MONTHS))
+    ALL_MONTHS = CSV_MONTHS + exchange_months
+    print(f'Months: {ALL_MONTHS} (exchange-sourced: {exchange_months})')
+
+    # Exchange-month GMV = sum of the daily GMV in that month (not scaled - CSV scale
+    # factors only apply to CSV months). Exchange-month ORDERS come from orders_by_date
+    # (never from summary.this_month.orders - once the next month starts that leaks the
+    # NEW month's order count into the OLD month, e.g. 2026-09's 29 orders into Aug).
+    exch_gmv = {m: round(sum(v for d, v in zip(labels, data['gmv_by_date']['data']) if d[:7] == m), 2)
+                for m in exchange_months}
+    ob_labels = data.get('orders_by_date', {}).get('labels', [])
+    ob_data = data.get('orders_by_date', {}).get('data', [])
+    exch_orders = {m: int(sum(v for d, v in zip(ob_labels, ob_data) if str(d)[:7] == m))
+                   for m in exchange_months}
+
+    month_gmv = [csv_totals.get(m, 0) for m in CSV_MONTHS] + [exch_gmv[m] for m in exchange_months]
+    month_orders = [csv_orders.get(m, 0) for m in CSV_MONTHS] + [exch_orders[m] for m in exchange_months]
+
+    # Per-SKU / per-brand monthly: CSV months from the CSV, exchange months from the
+    # daily arrays (top-50 + brand = single THANN row, same as the old Aug handling).
     sd = data['gmv_by_sku_daily']
     qd = data['qty_by_sku_daily']
-    aug_sku_gmv = defaultdict(float)
-    aug_sku_qty = defaultdict(float)
+    exch_sku_gmv = {m: defaultdict(float) for m in exchange_months}
+    exch_sku_qty = {m: defaultdict(float) for m in exchange_months}
     for di, dl in enumerate(sd['labels']):
-        if dl.startswith('2026-08'):
-            for si, sku in enumerate(exch_skus):
-                aug_sku_gmv[sku] += sd['data'][di][si]
-                aug_sku_qty[sku] += qd['data'][di][si]
+        mth = dl[:7]
+        if mth not in exch_sku_gmv:
+            continue
+        row_g = sd['data'][di]
+        row_q = qd['data'][di]
+        for si, sku in enumerate(sd['skus']):
+            exch_sku_gmv[mth][sku] += row_g[si]
+            exch_sku_qty[mth][sku] += row_q[si]
 
+    all_skus = sorted(set().union(*[set(s.keys()) for s in csv_monthly.values()]))
     sku_monthly_data, qty_monthly_data = [], []
     for mth in ALL_MONTHS:
         g_row, q_row = [], []
@@ -148,16 +169,17 @@ def main():
                 g_row.append(round(csv_monthly[mth].get(sku, {}).get('gmv', 0), 2))
                 q_row.append(round(csv_monthly[mth].get(sku, {}).get('qty', 0), 2))
             else:
-                g_row.append(round(aug_sku_gmv.get(sku, 0), 2))
-                q_row.append(round(aug_sku_qty.get(sku, 0), 2))
+                g_row.append(round(exch_sku_gmv[mth].get(sku, 0), 2))
+                q_row.append(round(exch_sku_qty[mth].get(sku, 0), 2))
         sku_monthly_data.append(g_row)
         qty_monthly_data.append(q_row)
     data['gmv_by_sku_monthly'] = {'labels': ALL_MONTHS, 'skus': all_skus, 'data': sku_monthly_data}
     data['qty_by_sku_monthly'] = {'labels': ALL_MONTHS, 'skus': all_skus, 'data': qty_monthly_data}
+    data['gmv_by_month'] = {'labels': ALL_MONTHS, 'data': month_gmv}
     data['gmv_by_brand_monthly'] = {'labels': ALL_MONTHS, 'brands': ['THANN'],
                                     'data': [[round(g, 2)] for g in month_gmv]}
 
-    # --- 2. Per-month scale factors ---
+    # --- 2. Per-month scale factors (CSV months only) ---
     exchange_month = defaultdict(float)
     for d, v in zip(labels, data['gmv_by_date']['data']):
         exchange_month[d[:7]] += v
@@ -186,7 +208,7 @@ def main():
                 new_sku.append(dl)
         data[key]['data'] = new_sku
 
-    # --- 5. 其他 Others row for daily SKU charts ---
+    # --- 5. Others aggregate row for daily SKU charts ---
     for key, total_key in [('gmv_by_sku_daily', 'gmv_by_date'), ('qty_by_sku_daily', None)]:
         sku_data = data[key]
         oi = sku_data['skus'].index('其他 Others') if '其他 Others' in sku_data['skus'] else None
@@ -215,7 +237,6 @@ def main():
     # --- 6. DayOfWeek re-aggregate (7 days) + scale ---
     DAY_EN = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     DAY_CN = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期日']
-    # Rebuild from scaled gmv_by_date
     dow_agg = [0.0] * 7
     from datetime import datetime
     for d, v in zip(labels, data['gmv_by_date']['data']):
@@ -262,44 +283,54 @@ def main():
         bd['data'][big][0] = round(bd['data'][big][0] + diff, 2)
 
     # --- 9. Qty integer normalization (daily) ---
-    qd = data['qty_by_sku_daily']
-    for i in range(len(qd['data'])):
-        qd['data'][i] = [round(v) for v in qd['data'][i]]
-    oi = qd['skus'].index('其他 Others')
+    qd2 = data['qty_by_sku_daily']
+    for i in range(len(qd2['data'])):
+        qd2['data'][i] = [round(v) for v in qd2['data'][i]]
+    oi = qd2['skus'].index('其他 Others')
     for mth, target in csv_qty.items():
-        idxs = [i for i, d in enumerate(qd['labels']) if d.startswith(mth)]
+        idxs = [i for i, d in enumerate(qd2['labels']) if d.startswith(mth)]
         if not idxs:
             continue
-        cur = sum(sum(qd['data'][i]) for i in idxs)
+        cur = sum(sum(qd2['data'][i]) for i in idxs)
         diff = target - cur
         if diff == 0:
             continue
-        big = max(idxs, key=lambda i: qd['data'][i][oi])
-        qd['data'][big][oi] = qd['data'][big][oi] + diff
+        big = max(idxs, key=lambda i: qd2['data'][i][oi])
+        qd2['data'][big][oi] = qd2['data'][big][oi] + diff
 
-    # --- 10. Summary ---
-    total_gmv = round(sum(csv_totals.values()) + aug_gmv, 2)
-    total_orders = sum(csv_orders.values()) + aug_orders
+    # --- 10. Summary (dynamic: last three months, CSV-authoritative where available) ---
+    total_gmv = round(sum(month_gmv), 2)
+    total_orders = int(sum(month_orders))
     data['summary']['total_gmv'] = total_gmv
     data['summary']['total_orders'] = total_orders
     data['summary']['avg_order_value'] = round(total_gmv / total_orders, 2) if total_orders else 0
-    data['summary']['date_range'] = f"{min(data['gmv_by_date']['labels'])} to {max(data['gmv_by_date']['labels'])}"
-    data['summary']['this_month'] = {'label': '2026-08', 'gmv': aug_gmv, 'orders': aug_orders,
-                                     'avg': round(aug_gmv / aug_orders, 2) if aug_orders else 0}
-    data['summary']['last_month'] = {'label': '2026-07', 'gmv': csv_totals['2026-07'],
-                                     'orders': csv_orders['2026-07'],
-                                     'avg': round(csv_totals['2026-07'] / csv_orders['2026-07'], 2)}
-    data['summary']['month_before_last'] = {'label': '2026-06', 'gmv': csv_totals['2026-06'],
-                                            'orders': csv_orders['2026-06'],
-                                            'avg': round(csv_totals['2026-06'] / csv_orders['2026-06'], 2)}
+    data['summary']['date_range'] = f"{min(labels)} to {max(labels)}"
+
+    def _summary_month(idx):
+        mth = ALL_MONTHS[idx]
+        g = month_gmv[idx]
+        o = month_orders[idx]
+        return {'label': mth, 'gmv': g, 'orders': o,
+                'avg': round(g / o, 2) if o else 0}
+
+    n = len(ALL_MONTHS)
+    if n >= 1:
+        data['summary']['this_month'] = _summary_month(n - 1)
+    if n >= 2:
+        data['summary']['last_month'] = _summary_month(n - 2)
+    if n >= 3:
+        data['summary']['month_before_last'] = _summary_month(n - 3)
 
     save_data(data)
     print(f'✅ aligned: total ${total_gmv:,.2f} / {total_orders} orders')
     for mth in ALL_MONTHS:
         tot = data['gmv_by_month']['data'][data['gmv_by_month']['labels'].index(mth)]
         csv_v = csv_totals.get(mth, 0)
-        mark = '✅' if abs(tot - csv_v) < 0.005 else '❌'
-        print(f'  {mth}: ${tot:,.2f} vs CSV ${csv_v:,.2f} {mark}')
+        if mth in csv_totals:
+            mark = '✅' if abs(tot - csv_v) < 0.005 else '❌'
+            print(f'  {mth}: ${tot:,.2f} vs CSV ${csv_v:,.2f} {mark}')
+        else:
+            print(f'  {mth}: ${tot:,.2f} (exchange-sourced) ✅')
 
 
 if __name__ == '__main__':
