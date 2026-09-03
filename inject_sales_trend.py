@@ -4,6 +4,12 @@
 DYNAMIC version (2026-08-12): derives the newest 235959 report from
 reports/order_reports/ instead of hardcoding dates (the 08-11 run hardcoded
 2026-08-10 and silently failed to add the next day's row).
+
+MONTH-ROLLOVER version (2026-09-03): when the newest report starts a NEW month,
+the script now inserts that month's header (e.g. "📅 2026年 十月") at the TOP of
+the order table and places the new daily row directly under it. Previously the
+new month's rows sat under the previous month's header (Sep 2026 rows lived
+under the "八月" header for 3 cron runs before being noticed).
 """
 import glob
 import os
@@ -65,6 +71,9 @@ row_marker = f'ECOM-EXCH_DAILY_ORDER_H8391001_{newest}'
 if row_marker in html:
     print(f"{newest_disp} row already present; skip")
 else:
+    month_names = ['一月', '二月', '三月', '四月', '五月', '六月',
+                   '七月', '八月', '九月', '十月', '十一月', '十二月']
+    cur_hdr_txt = f'📅 {newest[:4]}年 {month_names[int(newest[4:6]) - 1]}'
     anchor = f'ECOM-EXCH_DAILY_ORDER_H8391001_{prev}235959.xlsx'
     a_idx = html.find(anchor)
     assert a_idx != -1, f"anchor row {prev_disp} not found"
@@ -74,9 +83,31 @@ else:
     new_tr = old_tr.replace(prev, newest)
     new_tr = new_tr.replace(prev_disp, newest_disp)
     new_tr = re.sub(r'\$[\d,]+\.\d{2}', gmv_str, new_tr, count=1)
-    # insert BEFORE the anchor row (table is newest-first)
-    html = html[:tr_start] + new_tr + html[tr_start:]
-    print(f"inserted {newest_disp} tr before {prev_disp} row")
+    if cur_hdr_txt not in html:
+        # Month rollover: add the new month's header at the TOP of the order table
+        # and place the new row directly under it (rows are newest-first).
+        first_link = html.find('order_reports/ECOM-EXCH_DAILY_ORDER_H8391001_')
+        assert first_link != -1, "order table not found"
+        tbl_start = html.rfind('<table', 0, first_link)
+        tbody_idx = html.find('<tbody>', tbl_start)
+        assert tbody_idx != -1 and tbody_idx < first_link, "order tbody not found"
+        region = html[tbody_idx:first_link]
+        hdr_re = re.compile(r'(<tr style="background:#f0f0f0;font-weight:bold;color:#555;">\s*'
+                            r'<td colspan="4" class="text-start ps-3">'
+                            r'<span style="font-size:0.85rem;">)(📅 \d{4}年 [^<\s]+)'
+                            r'(</span></td>\s*</tr>)')
+        mh = hdr_re.search(region)
+        assert mh, "no month header row in order table"
+        new_hdr_row = mh.group(1) + cur_hdr_txt + mh.group(3)
+        ins = tbody_idx + mh.start()
+        html = html[:ins] + new_hdr_row + html[ins:]
+        ins_row = ins + len(new_hdr_row)
+        html = html[:ins_row] + new_tr + html[ins_row:]
+        print(f"month rollover: header {cur_hdr_txt} + {newest_disp} row inserted at top")
+    else:
+        # insert BEFORE the anchor row (table is newest-first)
+        html = html[:tr_start] + new_tr + html[tr_start:]
+        print(f"inserted {newest_disp} tr before {prev_disp} row")
 
 open(os.path.join(REPO, 'index.html'), 'w', encoding='utf-8').write(html)
 print("index.html written, size:", len(html))
